@@ -7,67 +7,85 @@ from llm_router import LLMRouter
 
 st.set_page_config(page_title="UniMate - Academic Assistant", page_icon="🎓", layout="wide")
 
-if "rag_engine" not in st.session_state:
-    st.session_state.rag_engine = RAGEngine()
-if "llm_router" not in st.session_state:
-    st.session_state.llm_router = LLMRouter()
+# Custom CSS for Professional Styling
+st.markdown("""
+<style>
+    /* Main App Background */
+    .stApp {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #f8fafc;
+    }
 
-st.markdown("<h1 style='text-align: center;'>🎓 UniMate</h1>", unsafe_allow_html=True)
-st.markdown("<h4 style='text-align: center; color: gray;'>Hybrid Offline-Online RAG-Based AI Academic Assistant</h4>", unsafe_allow_html=True)
-st.divider()
+    /* Custom Header Banner */
+    .header-container {
+        padding: 2rem 1rem;
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        margin-bottom: 2rem;
+    }
 
-is_online = check_internet_connection()
+    .main-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #38bdf8, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    if is_online:
-        st.success("● Network: Online (Groq Active)")
-    else:
-        st.warning("● Network: Offline (Local AI Active)")
-with col2:
-    kb_loaded = st.session_state.rag_engine.vector_store is not None
-    st.info(f"📚 Knowledge Base: {'Loaded' if kb_loaded else 'Empty'}")
-with col3:
-    st.success("🔒 No-Guessing Mode: Active")
+    .subtitle {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        font-weight: 400;
+    }
 
-st.divider()
+    /* Styled Action Buttons */
+    .stButton>button {
+        width: 100%;
+        background: linear-gradient(90deg, #4f46e5, #06b6d4);
+        color: white !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1.2rem !important;
+        border-radius: 10px !important;
+        border: none !important;
+        transition: all 0.3s ease-in-out !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
 
-st.sidebar.title("🛠️ Knowledge Base Setup")
-uploaded_files = st.sidebar.file_uploader("Upload Department PDFs", type=["pdf"], accept_multiple_files=True)
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+    }
 
-if st.sidebar.button("Build / Update Index"):
-    if uploaded_files:
-        temp_paths = []
-        for file in uploaded_files:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                tmp.write(file.getvalue())
-                temp_paths.append(tmp.name)
-        
-        with st.spinner("Processing document embeddings..."):
-            chunks_count = st.session_state.rag_engine.process_and_index_pdfs(temp_paths)
-            for path in temp_paths:
-                os.remove(path)
-            st.sidebar.success(f"Indexed {chunks_count} chunks successfully!")
-            st.rerun()
-    else:
-        st.sidebar.error("Please select PDF files first.")
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: #0f172a !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
 
-st.subheader("💬 Ask Your Academic Question")
-user_query = st.text_area("Type your question here (Supports English & Urdu):", height=100)
+    /* Text Area Focus Ring */
+    .stTextArea textarea {
+        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    
+    .stTextArea textarea:focus {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.3) !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-if st.button("Ask UniMate", type="primary"):
-    if not user_query.strip():
-        st.warning("Please enter a question.")
-    else:
-        with st.spinner("Processing..."):
-            context, sources = st.session_state.rag_engine.retrieve_context(user_query)
-            response, engine_used = st.session_state.llm_router.query(user_query, context, is_online)
-            
-            st.markdown("### Answer")
-            st.write(response)
-            st.caption(f"Engine Executed: **{engine_used}**")
-            
-            if sources:
-                st.markdown("#### Trusted Sources")
-                for src in sources:
-                    st.markdown(f"- `{src}`")
+# Custom Header HTML Rendering
+st.markdown("""
+<div class="header-container">
+    <div class="main-title">🎓 UniMate</div>
+    <div class="subtitle">Hybrid Offline-Online RAG-Based AI Academic Assistant</div>
+</div>
+""", unsafe_allow_html=True)
