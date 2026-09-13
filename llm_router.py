@@ -16,11 +16,9 @@ class LLMRouter:
         
         full_prompt = f"Context:\n{context}\n\nQuestion: {prompt}"
 
-        # 1. Direct Groq Cloud Execution (Online Mode)
+        # 1. ONLINE MODE (Groq API)
         if is_online and self.groq_api_key:
-            # Active and supported Groq models
             models_to_try = ["llama-3.1-8b-instant", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
-            
             for model_name in models_to_try:
                 try:
                     client = Groq(api_key=self.groq_api_key)
@@ -34,25 +32,33 @@ class LLMRouter:
                     )
                     return completion.choices[0].message.content, f"Groq Cloud AI ({model_name})"
                 except Exception:
-                    continue  # Try next model if one is unavailable
+                    continue
 
-            return "⚠️ Groq API Error: Active models could not be reached. Check API key.", "Groq API Error"
+        # 2. OFFLINE MODE (Local Ollama Fallback)
+        try:
+            # Check if local Ollama server is active on localhost
+            response = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": "llama3",
+                    "prompt": f"{system_instruction}\n\n{full_prompt}",
+                    "stream": False
+                },
+                timeout=5
+            )
+            if response.status_code == 200:
+                return response.json().get("response", ""), "Local Ollama AI (Offline)"
+        except Exception:
+            pass
 
-        # 2. Local Ollama Execution (Only when Offline)
-        if not is_online:
-            try:
-                response = requests.post(
-                    "http://localhost:11434/api/generate",
-                    json={
-                        "model": "llama3",
-                        "prompt": f"{system_instruction}\n\n{full_prompt}",
-                        "stream": False
-                    },
-                    timeout=10
-                )
-                if response.status_code == 200:
-                    return response.json().get("response", ""), "Local Ollama AI (Offline)"
-            except Exception:
-                return "⚠️ Local Offline Model Unavailable. Please start Ollama on your local machine.", "Offline Error"
-
-        return "⚠️ API Key Missing. Please set GROQ_API_KEY in Streamlit Cloud Secrets.", "Configuration Error"
+        # 3. SAFE GRACEFUL FALLBACK (Error display standard format)
+        if is_online:
+            return "⚠️ **Groq API Error:** Please verify your API Key in Streamlit Secrets.", "API Configuration Error"
+        else:
+            return (
+                "📶 **Offline Mode Active:** Internet connection unavailable and local Ollama instance was not detected on `http://localhost:11434`.\n\n"
+                "**To run offline locally:**\n"
+                "1. Download & Install [Ollama](https://ollama.com/download).\n"
+                "2. Run `ollama run llama3` in terminal.",
+                "Offline Engine Unavailable"
+            )
