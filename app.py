@@ -8,36 +8,19 @@ from tools import generate_mcqs, summarize_knowledge_base, solve_math_problem
 
 st.set_page_config(page_title="UniMate - Academic Assistant", page_icon="🎓", layout="wide")
 
-# Sky Blue Background with Watermark Pattern & High Contrast UI
+# Academic Library Watermark & Sky Blue Aesthetic Theme
 st.markdown("""
 <style>
-    /* Sky Blue Theme with Watermark Pattern */
+    /* Sky Blue Gradient with Academic Library & Study Pattern Watermark */
     .stApp {
-        background-color: #e0f2fe;
+        background-color: #f0f9ff;
         background-image: 
-            radial-gradient(#bae6fd 1.5px, transparent 1.5px), 
-            linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
-        background-size: 30px 30px, 100% 100%;
+            linear-gradient(rgba(240, 249, 255, 0.88), rgba(224, 242, 254, 0.92)),
+            url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1600&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
         color: #0f172a;
-    }
-
-    /* Academic Watermark Overlay */
-    .stApp::before {
-        content: "🎓 UNIMATE ACADEMIC ASSISTANT   🎓 UNIMATE ACADEMIC ASSISTANT   🎓 UNIMATE ACADEMIC ASSISTANT";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 200%;
-        height: 200%;
-        font-size: 1.8rem;
-        font-weight: 900;
-        color: rgba(2, 132, 199, 0.04);
-        transform: rotate(-15deg);
-        pointer-events: none;
-        z-index: 0;
-        line-height: 120px;
-        word-spacing: 50px;
-        white-space: wrap;
     }
 
     /* Main Header Banner */
@@ -49,8 +32,6 @@ st.markdown("""
         text-align: center;
         box-shadow: 0 10px 25px rgba(2, 132, 199, 0.25);
         margin-bottom: 2rem;
-        position: relative;
-        z-index: 1;
     }
 
     .main-title {
@@ -65,6 +46,11 @@ st.markdown("""
         font-size: 1.15rem;
         font-weight: 400;
         opacity: 0.95;
+    }
+
+    /* Content Cards for High Text Contrast */
+    .block-container {
+        padding-top: 2rem;
     }
 
     /* Custom Primary Buttons */
@@ -89,21 +75,23 @@ st.markdown("""
     /* Input Box Cards */
     .stTextArea textarea, .stTextInput input {
         border-radius: 12px !important;
-        border: 2px solid #93c5fd !important;
+        border: 2px solid #38bdf8 !important;
         background-color: #ffffff !important;
         color: #0f172a !important;
         font-size: 1rem !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
     }
 
     .stTextArea textarea:focus, .stTextInput input:focus {
         border-color: #0284c7 !important;
-        box-shadow: 0 0 10px rgba(2, 132, 199, 0.3) !important;
+        box-shadow: 0 0 12px rgba(2, 132, 199, 0.35) !important;
     }
 
     /* Tabs Styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        background-color: #cbd5e1;
+        background-color: rgba(203, 213, 225, 0.8);
+        backdrop-filter: blur(8px);
         padding: 6px;
         border-radius: 14px;
     }
@@ -118,13 +106,14 @@ st.markdown("""
     .stTabs [aria-selected="true"] {
         background-color: #ffffff !important;
         color: #0284c7 !important;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
     }
 
     /* Sidebar Background */
     section[data-testid="stSidebar"] {
-        background-color: #f0f9ff !important;
+        background-color: rgba(240, 249, 255, 0.95) !important;
         border-right: 2px solid #bae6fd !important;
+        backdrop-filter: blur(10px);
     }
 </style>
 """, unsafe_allow_html=True)
