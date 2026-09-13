@@ -5,7 +5,6 @@ from groq import Groq
 
 class LLMRouter:
     def __init__(self):
-        # Streamlit secrets ya environment variables se key fetch karein
         self.groq_api_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
 
     def query(self, prompt: str, context: str, is_online: bool) -> tuple[str, str]:
@@ -17,11 +16,12 @@ class LLMRouter:
         
         full_prompt = f"Context:\n{context}\n\nQuestion: {prompt}"
 
-        # 1. Direct Groq Cloud Execution (Online Mode)
+        # 1. Direct Groq Cloud Execution
         if is_online and self.groq_api_key:
             try:
                 client = Groq(api_key=self.groq_api_key)
                 completion = client.chat.completions.create(
+                    # Valid & updated Groq model name
                     model="llama-3.3-70b-versatile",
                     messages=[
                         {"role": "system", "content": system_instruction},
@@ -31,9 +31,22 @@ class LLMRouter:
                 )
                 return completion.choices[0].message.content, "Groq Cloud AI (Online)"
             except Exception as e:
-                return f"⚠️ Groq API Error: {str(e)}", "Groq API Error"
+                # Secondary Fallback Model (llama-3.1-8b-instant) agar primary limit hit ho
+                try:
+                    client = Groq(api_key=self.groq_api_key)
+                    completion = client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[
+                            {"role": "system", "content": system_instruction},
+                            {"role": "user", "content": full_prompt}
+                        ],
+                        temperature=0.2,
+                    )
+                    return completion.choices[0].message.content, "Groq Cloud AI (Fallback 8B)"
+                except Exception as fallback_error:
+                    return f"⚠️ Groq API Error: {str(fallback_error)}", "Groq API Error"
 
-        # 2. Local Ollama Execution (Only when Internet is DISCONNECTED)
+        # 2. Local Ollama Execution (Only when Offline)
         if not is_online:
             try:
                 response = requests.post(
