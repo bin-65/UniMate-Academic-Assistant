@@ -1,38 +1,53 @@
-import groq
-import ollama
-from typing import Tuple
-from config import GROQ_API_KEY, GROQ_MODEL, LOCAL_MODEL, SYSTEM_PROMPT_GUARDRAILS
+import os
+import requests
+import streamlit as st
+from groq import Groq
 
 class LLMRouter:
     def __init__(self):
-        self.groq_client = groq.Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+        # Streamlit secrets ya environment variables se key fetch karein
+        self.groq_api_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
 
-    def query(self, prompt: str, context: str, is_online: bool) -> Tuple[str, str]:
-        formatted_prompt = f"Context:\n{context}\n\nQuestion:\n{prompt}" if context else prompt
+    def query(self, prompt: str, context: str, is_online: bool) -> tuple[str, str]:
+        system_instruction = (
+            "You are UniMate, an AI Academic Assistant. "
+            "Answer strictly using the provided context. "
+            "If the information is not in the context, explicitly state that you cannot find it in the trusted knowledge base."
+        )
+        
+        full_prompt = f"Context:\n{context}\n\nQuestion: {prompt}"
 
-        if is_online and self.groq_client:
+        # 1. Direct Groq Cloud Execution (Online Mode)
+        if is_online and self.groq_api_key:
             try:
-                response = self.groq_client.chat.completions.create(
-                    model=GROQ_MODEL,
+                client = Groq(api_key=self.groq_api_key)
+                completion = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
                     messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT_GUARDRAILS},
-                        {"role": "user", "content": formatted_prompt}
+                        {"role": "system", "content": system_instruction},
+                        {"role": "user", "content": full_prompt}
                     ],
-                    temperature=0.1
+                    temperature=0.2,
                 )
-                return response.choices[0].message.content, "Groq Cloud AI (Online)"
-            except Exception:
-                pass
+                return completion.choices[0].message.content, "Groq Cloud AI (Online)"
+            except Exception as e:
+                return f"⚠️ Groq API Error: {str(e)}", "Groq API Error"
 
-        try:
-            response = ollama.chat(
-                model=LOCAL_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT_GUARDRAILS},
-                    {"role": "user", "content": formatted_prompt}
-                ],
-                options={"temperature": 0.1}
-            )
-            return response['message']['content'], "Local AI / Ollama (Offline)"
-        except Exception as err:
-            return f"Execution error: Local model unavailable ({str(err)}). Ensure Ollama is running.", "Offline Engine Error"
+        # 2. Local Ollama Execution (Only when Internet is DISCONNECTED)
+        if not is_online:
+            try:
+                response = requests.post(
+                    "http://localhost:11434/api/generate",
+                    json={
+                        "model": "llama3",
+                        "prompt": f"{system_instruction}\n\n{full_prompt}",
+                        "stream": False
+                    },
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    return response.json().get("response", ""), "Local Ollama AI (Offline)"
+            except Exception:
+                return "⚠️ Local Offline Model Unavailable. Please start Ollama on your local machine.", "Offline Error"
+
+        return "⚠️ API Key Missing. Please set GROQ_API_KEY in Streamlit Cloud Secrets.", "Configuration Error"
