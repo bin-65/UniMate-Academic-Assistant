@@ -8,87 +8,123 @@ from tools import generate_mcqs, summarize_knowledge_base, solve_math_problem
 
 st.set_page_config(page_title="UniMate - Academic Assistant", page_icon="🎓", layout="wide")
 
-# Modern, Professional Light Theme CSS
+# Sky Blue Background with Watermark Pattern & High Contrast UI
 st.markdown("""
 <style>
-    /* Light Elegant Background */
+    /* Sky Blue Theme with Watermark Pattern */
     .stApp {
-        background: #f8fafc;
+        background-color: #e0f2fe;
+        background-image: 
+            radial-gradient(#bae6fd 1.5px, transparent 1.5px), 
+            linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+        background-size: 30px 30px, 100% 100%;
         color: #0f172a;
     }
 
-    /* Professional Top Banner */
+    /* Academic Watermark Overlay */
+    .stApp::before {
+        content: "🎓 UNIMATE ACADEMIC ASSISTANT   🎓 UNIMATE ACADEMIC ASSISTANT   🎓 UNIMATE ACADEMIC ASSISTANT";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 200%;
+        height: 200%;
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: rgba(2, 132, 199, 0.04);
+        transform: rotate(-15deg);
+        pointer-events: none;
+        z-index: 0;
+        line-height: 120px;
+        word-spacing: 50px;
+        white-space: wrap;
+    }
+
+    /* Main Header Banner */
     .main-header {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        padding: 2.5rem 1.5rem;
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        padding: 2.2rem 1.5rem;
         border-radius: 18px;
         color: white;
         text-align: center;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 10px 25px rgba(2, 132, 199, 0.25);
         margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
     }
 
     .main-title {
         font-size: 3rem;
         font-weight: 800;
-        letter-spacing: -1px;
-        margin-bottom: 0.3rem;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.2rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     }
 
     .sub-title {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         font-weight: 400;
-        opacity: 0.9;
-    }
-
-    /* Cards & Container Styling */
-    .status-card {
-        background: white;
-        padding: 1.2rem;
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        text-align: center;
+        opacity: 0.95;
     }
 
     /* Custom Primary Buttons */
     .stButton>button {
         width: 100%;
-        background: #2563eb !important;
+        background: linear-gradient(90deg, #0284c7, #0369a1) !important;
         color: white !important;
-        font-weight: 600 !important;
-        padding: 0.6rem 1.2rem !important;
-        border-radius: 10px !important;
+        font-weight: 700 !important;
+        padding: 0.65rem 1.2rem !important;
+        border-radius: 12px !important;
         border: none !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
         transition: all 0.2s ease-in-out !important;
     }
 
     .stButton>button:hover {
-        background: #1d4ed8 !important;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        background: linear-gradient(90deg, #0369a1, #075985) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+    }
+
+    /* Input Box Cards */
+    .stTextArea textarea, .stTextInput input {
+        border-radius: 12px !important;
+        border: 2px solid #93c5fd !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 1rem !important;
+    }
+
+    .stTextArea textarea:focus, .stTextInput input:focus {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 10px rgba(2, 132, 199, 0.3) !important;
     }
 
     /* Tabs Styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        background-color: #e2e8f0;
+        background-color: #cbd5e1;
         padding: 6px;
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     .stTabs [data-baseweb="tab"] {
-        height: 45px;
-        border-radius: 8px;
-        color: #475569;
-        font-weight: 600;
+        height: 48px;
+        border-radius: 10px;
+        color: #334155;
+        font-weight: 700;
     }
 
     .stTabs [aria-selected="true"] {
-        background-color: white !important;
-        color: #2563eb !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background-color: #ffffff !important;
+        color: #0284c7 !important;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Sidebar Background */
+    section[data-testid="stSidebar"] {
+        background-color: #f0f9ff !important;
+        border-right: 2px solid #bae6fd !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -126,8 +162,8 @@ with col3:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # Sidebar - Document Indexing
-st.sidebar.title("⚙️ Knowledge Base Upload")
-st.sidebar.markdown("Upload course outlines, lecture slides, or policy PDFs.")
+st.sidebar.title("⚙️ Knowledge Base Setup")
+st.sidebar.markdown("Upload department course outlines or policy PDFs.")
 uploaded_files = st.sidebar.file_uploader("Select PDF Documents", type=["pdf"], accept_multiple_files=True)
 
 if st.sidebar.button("Build / Update Index"):
@@ -211,7 +247,7 @@ with tab_summary:
 with tab_calc:
     st.subheader("Step-by-Step Academic Problem Solver")
     st.markdown("Solve mathematical, engineering, or logical problems with full formula steps.")
-    calc_input = st.text_area("Enter problem statement or equation:", height=100, placeholder="e.g., Calculate efficiency of a engine operating between 500K and 300K.")
+    calc_input = st.text_area("Enter problem statement or equation:", height=100, placeholder="e.g., Calculate efficiency of a heat engine operating between 500K and 300K.")
     
     if st.button("Solve Problem"):
         if not calc_input.strip():
