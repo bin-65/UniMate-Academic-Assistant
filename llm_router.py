@@ -16,35 +16,27 @@ class LLMRouter:
         
         full_prompt = f"Context:\n{context}\n\nQuestion: {prompt}"
 
-        # 1. Direct Groq Cloud Execution
+        # 1. Direct Groq Cloud Execution (Online Mode)
         if is_online and self.groq_api_key:
-            try:
-                client = Groq(api_key=self.groq_api_key)
-                completion = client.chat.completions.create(
-                    # Valid & updated Groq model name
-                    model="llama-3.3-70b-versatile",
-                    messages=[
-                        {"role": "system", "content": system_instruction},
-                        {"role": "user", "content": full_prompt}
-                    ],
-                    temperature=0.2,
-                )
-                return completion.choices[0].message.content, "Groq Cloud AI (Online)"
-            except Exception as e:
-                # Secondary Fallback Model (llama-3.1-8b-instant) agar primary limit hit ho
+            # Active and supported Groq models
+            models_to_try = ["llama-3.1-8b-instant", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
+            
+            for model_name in models_to_try:
                 try:
                     client = Groq(api_key=self.groq_api_key)
                     completion = client.chat.completions.create(
-                        model="llama-3.1-8b-instant",
+                        model=model_name,
                         messages=[
                             {"role": "system", "content": system_instruction},
                             {"role": "user", "content": full_prompt}
                         ],
                         temperature=0.2,
                     )
-                    return completion.choices[0].message.content, "Groq Cloud AI (Fallback 8B)"
-                except Exception as fallback_error:
-                    return f"⚠️ Groq API Error: {str(fallback_error)}", "Groq API Error"
+                    return completion.choices[0].message.content, f"Groq Cloud AI ({model_name})"
+                except Exception:
+                    continue  # Try next model if one is unavailable
+
+            return "⚠️ Groq API Error: Active models could not be reached. Check API key.", "Groq API Error"
 
         # 2. Local Ollama Execution (Only when Offline)
         if not is_online:
