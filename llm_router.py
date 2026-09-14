@@ -14,6 +14,8 @@ class LLMRouter:
         if not self.groq_api_key:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
             
+        print(f"DEBUG: Key Loaded -> {self.groq_api_key[:6]}... (Length: {len(self.groq_api_key)})")
+            
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         self.ollama_url = "http://127.0.0.1:11434/api/generate"
 
@@ -26,27 +28,36 @@ class LLMRouter:
                 "Authorization": f"Bearer {self.groq_api_key}",
                 "Content-Type": "application/json"
             }
-            payload = {
-                "model": "llama-3.1-8b-instant",
-                "messages": [
-                    {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.7,
-                "max_tokens": 1024
-            }
+            
+            models_to_try = [
+                "llama-3.1-8b-instant",
+                "llama-3.3-70b-versatile",
+                "gemma2-9b-it"
+            ]
+            
+            for model_name in models_to_try:
+                payload = {
+                    "model": model_name,
+                    "messages": [
+                        {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 1024
+                }
 
-            try:
-                response = requests.post(self.groq_url, headers=headers, json=payload, timeout=15.0)
-                if response.status_code == 200:
-                    data = response.json()
-                    return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
-                else:
-                    print(f"Groq API Error {response.status_code}: {response.text}")
-            except Exception as e:
-                print(f"Groq Connection Failed: {str(e)}")
+                try:
+                    response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10.0)
+                    print(f"Trying Groq Model '{model_name}' -> Status: {response.status_code}")
+                    if response.status_code == 200:
+                        data = response.json()
+                        return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
+                    else:
+                        print(f"Error Response: {response.text}")
+                except Exception as e:
+                    print(f"Exception with {model_name}: {str(e)}")
 
-        # Fallback to Ollama
+        # Fallback to Ollama if all Groq attempts fail
         try:
             payload = {
                 "model": "llama3",
@@ -60,4 +71,4 @@ class LLMRouter:
         except Exception as e:
             pass
 
-        return "**[Connection Error]** Both Groq and Ollama failed. Please check your API key.", "[Error Mode]"
+        return "**[Connection Error]** Groq API key appears invalid or unauthorized. Please generate a fresh key from Groq Console.", "[Error Mode]"
