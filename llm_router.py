@@ -48,7 +48,7 @@ class LLMRouter:
         }
         
         payload = {
-            "model": "llama-3.1-8b-instant",
+            "model": "llama3-8b-8192",  # Updated to stable Groq model ID to avoid 404 error
             "messages": [
                 {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
                 {"role": "user", "content": prompt}
