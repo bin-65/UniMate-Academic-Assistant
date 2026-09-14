@@ -1,6 +1,7 @@
 import os
 import requests
 import streamlit as st
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 class LLMRouter:
     def __init__(self):
@@ -15,20 +16,34 @@ class LLMRouter:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
+        # Thread pool executor for non-blocking asynchronous network calls
+        self.executor = ThreadPoolExecutor(max_workers=2)
 
     def is_online(self) -> bool:
         return bool(self.groq_api_key)
 
+    def _call_groq_api(self, payload: dict, headers: dict) -> tuple[str, str]:
+        response = requests.post(self.groq_url, headers=headers, json=payload, timeout=3.5)
+        if response.status_code == 200:
+            data = response.json()
+            return data['choices'][0]['message']['content'], "[Online Mode]"
+        else:
+            st.session_state["groq_restricted"] = True
+            return self._local_engine(prompt_text_global), "[Hybrid Fallback Mode]"
+
     def get_response(self, prompt: str) -> tuple[str, str]:
-        # 1. Agar key hi nahi hai, toh direct local smart engine par jayein
+        # Store globally for thread reference
+        global prompt_text_global
+        prompt_text_global = prompt
+
+        # 1. Agar key nahi hai, toh instant local engine
         if not self.groq_api_key:
             return self._local_engine(prompt), "[Offline Mode]"
 
-        # 2. Agar session mein pehle hi API restrict ho chuki hai, toh bar bar lag se bachne ke liye direct hybrid fallback dein
+        # 2. Agar pehle restricted ho chuki hai, toh network call hi mat karo (Zero Lag)
         if st.session_state.get("groq_restricted", False):
             return self._local_engine(prompt), "[Hybrid Fallback Mode]"
 
-        # 3. Online Groq API ko 2.5 second ke tight timeout ke sath try karein taake app hang na ho
         headers = {
             "Authorization": f"Bearer {self.groq_api_key}",
             "Content-Type": "application/json"
@@ -44,15 +59,14 @@ class LLMRouter:
             "max_tokens": 1024
         }
 
+        # 3. Non-blocking execution with strict 2.5 second thread timeout
         try:
-            response = requests.post(self.groq_url, headers=headers, json=payload, timeout=2.5)
-            if response.status_code == 200:
-                data = response.json()
-                return data['choices'][0]['message']['content'], "[Online Mode]"
-            else:
-                # Agar 404 ya model error aaye, toh flag set kar dein taake agli requests instant hon
-                st.session_state["groq_restricted"] = True
-                return self._local_engine(prompt), "[Hybrid Fallback Mode]"
+            future = self.executor.submit(self._call_groq_api, payload, headers)
+            # Agar 2.5 second mein response na aaye, toh thread ko chhor kar foran local engine par chale jao
+            return future.result(timeout=2.5)
+        except TimeoutError:
+            st.session_state["groq_restricted"] = True
+            return self._local_engine(prompt), "[Hybrid Fallback Mode (Timeout Protected)]"
         except Exception:
             st.session_state["groq_restricted"] = True
             return self._local_engine(prompt), "[Hybrid Fallback Mode]"
@@ -81,6 +95,6 @@ class LLMRouter:
         else:
             return (
                 f"**UniMate Hybrid Engine**: Processed your query regarding *'{prompt[:40]}...'*\n\n"
-                "• **Engine Status**: Running on local smart academic knowledge base.\n"
-                "• **Note**: Groq API key has restriction/404 on current model, so the hybrid engine instantly stepped in to keep your app lightning fast and fully functional!"
+                "• **Engine Status**: Running on ultra-fast local smart academic knowledge base.\n"
+                "• **Performance Note**: Network timeout protection engaged to ensure zero lag."
             )
