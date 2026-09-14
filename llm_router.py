@@ -16,13 +16,12 @@ class LLMRouter:
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         
-        # Updated models list including lightweight & preview models
+        # Updated list containing current active Groq model IDs
         self.models_to_try = [
             "llama-3.1-8b-instant",
-            "llama-3.2-3b-preview",
-            "llama-3.2-1b-preview",
             "llama-3.3-70b-versatile",
-            "mixtral-8x7b-32768"
+            "openai/gpt-oss-20b",
+            "qwen/qwen3-32b"
         ]
 
     def is_online(self) -> bool:
@@ -39,12 +38,23 @@ class LLMRouter:
         
         payload = {
             "messages": [
-                {"role": "system", "content": "You are UniMate, an expert academic assistant."},
+                {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
                 {"role": "user", "content": prompt}
             ],
             "temperature": 0.7,
             "max_tokens": 1024
         }
+
+        # Check cached model first for instant speed
+        if "working_groq_model" in st.session_state:
+            payload["model"] = st.session_state["working_groq_model"]
+            try:
+                response = requests.post(self.groq_url, headers=headers, json=payload, timeout=8)
+                if response.status_code == 200:
+                    data = response.json()
+                    return data['choices'][0]['message']['content'], "[Online Mode]"
+            except Exception:
+                pass
 
         detailed_errors = []
         for model_name in self.models_to_try:
@@ -53,14 +63,12 @@ class LLMRouter:
                 response = requests.post(self.groq_url, headers=headers, json=payload, timeout=8)
                 if response.status_code == 200:
                     data = response.json()
+                    st.session_state["working_groq_model"] = model_name
                     return data['choices'][0]['message']['content'], "[Online Mode]"
                 else:
-                    # Capture the exact error message from Groq JSON response
                     err_msg = response.json().get("error", {}).get("message", response.text)
                     detailed_errors.append(f"Model `{model_name}` ({response.status_code}): {err_msg}")
             except Exception as e:
                 detailed_errors.append(f"Model `{model_name}` Exception: {str(e)}")
 
-        # If everything fails, show the exact detailed errors on screen
-        error_report = "\n\n".join(detailed_errors)
-        return f"**Detailed Groq Diagnostics:**\n\n{error_report}", "[API Error]"
+        return f"**Groq API Connection Failed:**\n\n" + "\n".join(detailed_errors), "[API Error]"
