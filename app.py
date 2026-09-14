@@ -1,5 +1,8 @@
 import streamlit as st
-import fitz  # PyMuPDF for PDF text extraction
+import io
+import fitz  # PyMuPDF for PDF
+from docx import Document  # python-docx for Word
+import pandas as pd  # pandas for Excel
 from llm_router import LLMRouter
 
 # --- Page Configuration ---
@@ -20,7 +23,6 @@ router = get_router()
 # --- Light Professional Library & Study Platform Styling ---
 st.markdown("""
     <style>
-    /* Main App Background with Light University Library Theme */
     .stApp {
         background-image: linear-gradient(rgba(248, 250, 252, 0.90), rgba(241, 245, 249, 0.94)), 
                           url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop');
@@ -28,8 +30,6 @@ st.markdown("""
         background-position: center;
         background-attachment: fixed;
     }
-
-    /* Custom Header Styling */
     .main-header {
         font-size: 2.4rem;
         color: #1E3A8A !important;
@@ -41,8 +41,6 @@ st.markdown("""
         color: #475569 !important;
         margin-bottom: 25px;
     }
-
-    /* Light Glassmorphism Container for Content */
     div.block-container {
         background: rgba(255, 255, 255, 0.88);
         backdrop-filter: blur(10px);
@@ -53,8 +51,6 @@ st.markdown("""
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         color: #1E293B;
     }
-
-    /* Sidebar Styling */
     section[data-testid="stSidebar"] {
         background-color: rgba(241, 245, 249, 0.95);
         border-right: 1px solid rgba(203, 213, 225, 0.6);
@@ -65,20 +61,15 @@ st.markdown("""
         border: none;
         box-shadow: none;
     }
-
-    /* Typography & Inputs for Light Theme */
     h1, h2, h3, h4, h5, h6, p, span, label {
         color: #0F172A !important;
     }
-    
     .stTextInput input, .stTextArea textarea, .stSelectbox select {
         background-color: #FFFFFF !important;
         color: #0F172A !important;
         border: 1px solid #CBD5E1 !important;
         border-radius: 8px !important;
     }
-
-    /* Buttons Styling */
     .stButton button {
         background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         color: white;
@@ -96,10 +87,37 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Sidebar Info ---
+# --- Helper Function to Extract Text from Multiple Formats ---
+def extract_document_text(uploaded_file) -> str:
+    file_extension = uploaded_file.name.split('.')[-1].lower()
+    extracted_text = ""
+    
+    try:
+        if file_extension == 'pdf':
+            file_bytes = uploaded_file.read()
+            doc = fitz.open(stream=file_bytes, filetype="pdf")
+            for page in doc:
+                extracted_text += page.get_text() + "\n"
+                
+        elif file_extension == 'docx':
+            doc = Document(uploaded_file)
+            for para in doc.paragraphs:
+                extracted_text += para.text + "\n"
+                
+        elif file_extension in ['xlsx', 'xls']:
+            df = pd.read_excel(uploaded_file, sheet_name=None)
+            for sheet_name, sheet_df in df.items():
+                extracted_text += f"\n--- Sheet: {sheet_name} ---\n"
+                extracted_text += sheet_df.to_string(index=False) + "\n"
+    except Exception as e:
+        extracted_text = f"Error reading document: {str(e)}"
+        
+    return extracted_text
+
+# --- Sidebar: Document Uploader & Controls ---
 with st.sidebar:
     st.markdown("### 🎓 UniMate Control Panel")
-    st.markdown("Hybrid Smart Learning Engine for Academic Success.")
+    st.markdown("Hybrid Smart Learning Engine")
     st.markdown("---")
     
     # Engine Status Indicator
@@ -110,8 +128,26 @@ with st.sidebar:
         st.warning("🟡 Engine Status: Local Smart Mode")
         
     st.markdown("---")
-    st.markdown("### 💡 Study Quick Tips")
-    st.markdown("- **Chat**: Ask conceptual questions\n- **Quiz**: Test your knowledge\n- **PDF**: Summarize notes instantly\n- **Math**: Step-by-step problem solver")
+    st.markdown("### 📁 Document Knowledge Base")
+    st.markdown("Upload a file (**PDF, Word, Excel**) to query its contents directly:")
+    
+    uploaded_doc = st.file_uploader("Upload Study Material", type=["pdf", "docx", "xlsx", "xls"])
+    
+    document_context = ""
+    if uploaded_doc is not None:
+        with st.spinner("Processing document..."):
+            document_context = extract_document_text(uploaded_doc)
+            st.session_state["uploaded_doc_text"] = document_context
+            st.success(f"✅ Loaded: {uploaded_doc.name}")
+            with st.expander("Preview Extracted Data"):
+                st.write(document_context[:800] + "..." if len(document_context) > 800 else document_context)
+    elif "uploaded_doc_text" in st.session_state:
+        document_context = st.session_state["uploaded_doc_text"]
+        st.info("📌 Active Document Loaded in Memory")
+
+    st.markdown("---")
+    st.markdown("### 💡 Quick Tips")
+    st.markdown("- Upload notes in sidebar.\n- Ask questions in Chat or Math Solver about the file!")
 
 # --- Main App Title ---
 st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
@@ -121,39 +157,43 @@ st.markdown('<p class="sub-header">Your lightning-fast hybrid study platform for
 tab1, tab2, tab3, tab4 = st.tabs([
     "💬 Assistant Chat", 
     "📝 Quiz & MCQ Generator", 
-    "📖 PDF Lecture Summarizer", 
+    "📖 Document Summarizer", 
     "🧮 Math & Logic Solver"
 ])
 
 # ==========================================
-# TAB 1: ASSISTANT CHAT
+# TAB 1: ASSISTANT CHAT (Context-Aware)
 # ==========================================
 with tab1:
     st.markdown("### 💬 Academic Chat Assistant")
-    st.markdown("Ask general academic queries, essay guidance, conceptual clarifications, or research notes.")
+    st.markdown("Ask general questions or query your uploaded document/notes.")
 
-    # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "Hello! I am UniMate. How can I help you with your studies today?", "mode": "[System]"}
+            {"role": "assistant", "content": "Hello! I am UniMate. Upload any PDF, Word, or Excel file in the sidebar and ask me anything about it!", "mode": "[System]"}
         ]
 
-    # Display chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if "mode" in message:
                 st.caption(f"Engine Mode: {message['mode']}")
 
-    # Chat Input
-    if prompt := st.chat_input("Ask any academic question (e.g., Explain First Law of Thermodynamics)..."):
+    if prompt := st.chat_input("Ask a question about your notes or general academics..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                response_text, mode_tag = router.get_response(prompt)
+            with st.spinner("Analyzing with document context..."):
+                # Combine prompt with uploaded document context if available
+                active_context = st.session_state.get("uploaded_doc_text", "")
+                if active_context:
+                    full_prompt = f"Context from uploaded document:\n{active_context[:4000]}\n\nUser Question: {prompt}"
+                else:
+                    full_prompt = prompt
+
+                response_text, mode_tag = router.get_response(full_prompt)
                 st.markdown(response_text)
                 st.caption(f"Engine Mode: {mode_tag}")
                 
@@ -168,13 +208,19 @@ with tab1:
 # ==========================================
 with tab2:
     st.markdown("### 📝 Interactive Quiz & MCQ Generator")
-    st.markdown("Test your knowledge instantly on any academic subject.")
+    st.markdown("Test your knowledge based on subjects or your uploaded document.")
 
-    subject = st.text_input("Enter Subject or Topic (e.g., Thermodynamics, Data Structures, Cyber Law):", "Thermodynamics", key="quiz_subject_input")
+    default_topic = "Uploaded Document Content" if "uploaded_doc_text" in st.session_state else "Thermodynamics"
+    subject = st.text_input("Enter Topic or Subject:", default_topic, key="quiz_subject_input")
     
     if st.button("Generate Practice Quiz"):
         with st.spinner("Generating custom practice questions..."):
-            quiz_prompt = f"Generate 3 multiple-choice questions (MCQs) with answers and brief explanations for university students on the topic: {subject}"
+            active_context = st.session_state.get("uploaded_doc_text", "")
+            if active_context:
+                quiz_prompt = f"Based on the following document text, generate 3 multiple-choice questions (MCQs) with answers and explanations:\n\n{active_context[:3500]}"
+            else:
+                quiz_prompt = f"Generate 3 multiple-choice questions (MCQs) with answers and explanations for university students on the topic: {subject}"
+                
             response_text, mode_tag = router.get_response(quiz_prompt)
             
             st.markdown("---")
@@ -183,57 +229,44 @@ with tab2:
             st.caption(f"Engine Mode: {mode_tag}")
 
 # ==========================================
-# TAB 3: PDF LECTURE SUMMARIZER
+# TAB 3: DOCUMENT SUMMARIZER
 # ==========================================
 with tab3:
-    st.markdown("### 📖 PDF Lecture Notes & Document Summarizer")
-    st.markdown("Upload your semester notes, research papers, or study guides to extract key insights instantly.")
+    st.markdown("### 📖 Document Notes & File Summarizer")
+    st.markdown("Summarize your uploaded PDF, Word, or Excel document instantly.")
 
-    uploaded_file = st.file_uploader("Upload PDF Document", type=["pdf"], key="pdf_uploader_main")
-    
-    if uploaded_file is not None:
-        with st.spinner("Reading document pages..."):
-            try:
-                file_bytes = uploaded_file.read()
-                doc = fitz.open(stream=file_bytes, filetype="pdf")
+    if "uploaded_doc_text" in st.session_state and st.session_state["uploaded_doc_text"]:
+        st.success("File is loaded from the sidebar! Click below to generate summary.")
+        if st.button("Extract Key Summary & Revision Notes", key="summary_btn_main"):
+            with st.spinner("Summarizing document content..."):
+                doc_text = st.session_state["uploaded_doc_text"]
+                summary_prompt = f"Summarize the following document into key bullet points, core concepts, and exam revision notes:\n\n{doc_text[:4000]}"
+                response_text, mode_tag = router.get_response(summary_prompt)
                 
-                text_content = ""
-                for page_num in range(len(doc)):
-                    page = doc.load_page(page_num)
-                    text_content += page.get_text()
-                
-                total_words = len(text_content.split())
-                
-                st.success(f"Document Processed Successfully! | Pages: {len(doc)} | Total Words: {total_words}")
-                
-                with st.expander("🔍 View Raw Text Preview"):
-                    st.write(text_content[:1500] + "..." if len(text_content) > 1500 else text_content)
-                    
-                if st.button("Extract Key Summary & Action Items", key="pdf_summary_btn"):
-                    with st.spinner("Synthesizing core academic takeaways..."):
-                        summary_prompt = f"Summarize the following academic notes into key bullet points and exam revision notes:\n\n{text_content[:4000]}"
-                        response_text, mode_tag = router.get_response(summary_prompt)
-                        
-                        st.markdown("---")
-                        st.markdown("### 📝 Smart Summary & Key Takeaways")
-                        st.markdown(response_text)
-                        st.caption(f"Engine Mode: {mode_tag}")
-                        
-            except Exception as e:
-                st.error(f"Error reading PDF file: {str(e)}")
+                st.markdown("---")
+                st.markdown("### 📝 Smart Summary & Takeaways")
+                st.markdown(response_text)
+                st.caption(f"Engine Mode: {mode_tag}")
+    else:
+        st.info("👈 Please upload a PDF, Word (.docx), or Excel (.xlsx) file in the sidebar first to use this summarizer.")
 
 # ==========================================
 # TAB 4: MATH & LOGIC SOLVER
 # ==========================================
 with tab4:
     st.markdown("### 🧮 Math, Formula & Engineering Logic Solver")
-    st.markdown("Step-by-step breakdown of equations, formulas, and technical problem statements.")
+    st.markdown("Solve technical problems from your notes or general equations.")
 
-    math_query = st.text_area("Enter Math/Engineering Problem or Formula Question:", "Explain the formula for First Law of Thermodynamics and solve a sample problem.", key="math_query_input")
+    math_query = st.text_area("Enter Math/Engineering Problem:", "Explain the formula for First Law of Thermodynamics and solve a sample problem.", key="math_query_input")
     
     if st.button("Solve Step-by-Step", key="math_solve_btn"):
         with st.spinner("Solving problem with step-by-step logic..."):
-            solver_prompt = f"Provide a detailed step-by-step mathematical or logical solution for: {math_query}"
+            active_context = st.session_state.get("uploaded_doc_text", "")
+            if active_context:
+                solver_prompt = f"Using context from the uploaded document if relevant, provide a detailed step-by-step solution for: {math_query}\n\nDocument Context:\n{active_context[:2500]}"
+            else:
+                solver_prompt = f"Provide a detailed step-by-step mathematical or logical solution for: {math_query}"
+                
             response_text, mode_tag = router.get_response(solver_prompt)
             
             st.markdown("---")
