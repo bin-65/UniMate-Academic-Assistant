@@ -1,6 +1,14 @@
 import os
+import sys
 import streamlit as st
-from connection_checker import is_connected
+
+# Ensure root directory is in python path for Streamlit Cloud imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from connection_checker import is_connected
+except ImportError:
+    from connection_checker import check_internet_connection as is_connected
 
 class LLMRouter:
     def __init__(self):
