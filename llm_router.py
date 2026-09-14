@@ -29,8 +29,7 @@ class LLMRouter:
                 data = response.json()
                 return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
             else:
-                # Capture exact Groq error response for debugging 400 error
-                return f"**[Groq API Error 400 Details]** {response.text}", "[Error Mode]"
+                return f"**[Groq API Error]** Status code {response.status_code}: {response.text}", "[Error Mode]"
         except Exception as e:
             return self._local_engine(prompt_text_global), f"[Hybrid Fallback Mode (Offline due to: {str(e)})]"
 
@@ -47,7 +46,7 @@ class LLMRouter:
         }
         
         payload = {
-            "model": "llama-3.1-8b-instant",  # Using Groq's standard active model
+            "model": "llama3-8b-8192",  # Stable Groq model identifier
             "messages": [
                 {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
                 {"role": "user", "content": prompt}
