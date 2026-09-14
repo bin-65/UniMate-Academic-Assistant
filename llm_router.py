@@ -29,15 +29,11 @@ class LLMRouter:
                 data = response.json()
                 return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
             else:
-                # If Groq fails, try local only if Ollama is reachable, otherwise show Groq error cleanly
-                return self._local_engine_safe(prompt_text_global, f"Groq Error {response.status_code}: {response.text}")
+                return f"**[Groq API Error]** Status code {response.status_code}: {response.text}", "[Error Mode]"
         except Exception as e:
-            return self._local_engine_safe(prompt_text_global, str(e))
+            return f"**[Connection Error]** Could not reach Groq API: {str(e)}", "[Error Mode]"
 
     def get_response(self, prompt: str) -> tuple[str, str]:
-        global prompt_text_global
-        prompt_text_global = prompt
-
         if not self.groq_api_key:
             return self._local_engine(prompt), "[Offline Mode (Ollama - Qwen)]"
 
@@ -47,7 +43,7 @@ class LLMRouter:
         }
         
         payload = {
-            "model": "llama-3.3-70b-versatile",
+            "model": "llama-3.3-70b-versatile",  # Groq's active current production model
             "messages": [
                 {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
                 {"role": "user", "content": prompt}
@@ -60,30 +56,24 @@ class LLMRouter:
             future = self.executor.submit(self._call_groq_api, payload, headers)
             return future.result(timeout=16.0)
         except (TimeoutError, Exception) as e:
-            return self._local_engine_safe(prompt, str(e))
+            return f"**[Router Timeout Error]** {str(e)}", "[Error Mode]"
 
-    def _local_engine_safe(self, prompt: str, fail_reason: str) -> tuple[str, str]:
+    def _local_engine(self, prompt: str) -> str:
         try:
             payload = {
                 "model": "qwen2.5:3b",
                 "prompt": f"You are UniMate, an expert academic assistant for university students. Answer the following query clearly:\n\n{prompt}",
                 "stream": False
             }
-            response = requests.post(self.ollama_url, json=payload, timeout=5.0)
+            response = requests.post(self.ollama_url, json=payload, timeout=10.0)
             if response.status_code == 200:
                 data = response.json()
-                return data.get("response", "No response generated."), "[Hybrid Fallback Mode (Offline)]"
-        except Exception:
-            pass
-        
-        # If both Groq and local fail, show a clean, helpful message instead of crashing
-        return (
-            f"**[API & Local Connection Error]**\n\n"
-            f"• **Online Error Details**: {fail_reason}\n"
-            f"• **Offline Status**: Local Ollama server is not running (`ollama serve`).\n\n"
-            f"Please check your internet/API key or start Ollama locally."
-        ), "[Error Mode]"
-
-    def _local_engine(self, prompt: str) -> str:
-        res, _ = self._local_engine_safe(prompt, "No API Key provided")
-        return res
+                return data.get("response", "No response generated from Ollama.")
+            else:
+                return f"**[Local Engine Error]** Ollama responded with status code {response.status_code}"
+        except Exception as e:
+            return (
+                f"**[UniMate Offline Mode]**\n\n"
+                f"Could not reach local Ollama server. Make sure `ollama serve` is running.\n"
+                f"• **Error Details**: {str(e)}"
+            )
