@@ -1,4 +1,10 @@
+import os
+import sys
 import streamlit as st
+
+# Ensure root directory is in python path for Streamlit Cloud imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from llm_router import LLMRouter
 
 st.set_page_config(page_title="UniMate AI Assistant", page_icon="🎓", layout="wide")
