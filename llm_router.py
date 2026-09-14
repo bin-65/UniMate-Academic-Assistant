@@ -25,47 +25,44 @@ class LLMRouter:
         ]
 
     def is_online(self) -> bool:
-        """Check internet & API key presence (Required by app.py)"""
-        if not self.groq_api_key:
-            return False
-        try:
-            requests.get("https://api.groq.com", timeout=3)
-            return True
-        except Exception:
-            return False
+        """Always return True if API key exists, bypassing external ping blocks"""
+        return bool(self.groq_api_key)
 
     def get_response(self, prompt: str) -> tuple[str, str]:
-        """Route query to Groq API or Local Fallback Engine"""
-        if self.is_online():
-            headers = {
-                "Authorization": f"Bearer {self.groq_api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            payload = {
-                "messages": [
-                    {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.7,
-                "max_tokens": 1024
-            }
+        """Route query directly to Groq API using available models"""
+        if not self.groq_api_key:
+            return self._offline_fallback_response(prompt), "[Offline Mode]"
 
-            for model_name in self.models_to_try:
-                payload["model"] = model_name
-                try:
-                    response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10)
-                    if response.status_code == 200:
-                        data = response.json()
-                        return data['choices'][0]['message']['content'], "[Online Mode]"
-                except Exception:
-                    continue
+        headers = {
+            "Authorization": f"Bearer {self.groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "messages": [
+                {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 1024
+        }
 
-        # Local Offline Fallback Engine
+        # Try models sequentially until one succeeds
+        for model_name in self.models_to_try:
+            payload["model"] = model_name
+            try:
+                response = requests.post(self.groq_url, headers=headers, json=payload, timeout=12)
+                if response.status_code == 200:
+                    data = response.json()
+                    return data['choices'][0]['message']['content'], "[Online Mode]"
+            except Exception:
+                continue
+
+        # Fallback to local rules engine only if all models fail
         return self._offline_fallback_response(prompt), "[Offline Mode]"
 
     def _offline_fallback_response(self, prompt: str) -> str:
-        """Rules-based academic offline engine when internet/API is down"""
+        """Rules-based academic offline engine when API fails"""
         prompt_lower = prompt.lower()
         
         if "quiz" in prompt_lower or "mcq" in prompt_lower:
@@ -75,28 +72,25 @@ class LLMRouter:
                 "   - A) Energy can be created out of nothing\n"
                 "   - B) Energy cannot be created or destroyed, only transformed\n"
                 "   - C) Total energy decreases over time\n"
-                "   - **Answer: B**\n\n"
-                "*(Connect to internet for dynamic AI-generated quizzes)*"
+                "   - **Answer: B**"
             )
         elif "summarize" in prompt_lower or "summary" in prompt_lower:
             return (
                 "**[Offline Summary Engine]**\n\n"
                 "• **Key Concept**: Academic notes/lecture summary requested.\n"
-                "• **Main Takeaway**: Core definitions and essential terms identified.\n"
-                "• **Note**: Full natural language summarization requires online API connectivity."
+                "• **Main Takeaway**: Core definitions and essential terms identified."
             )
         elif "math" in prompt_lower or "solve" in prompt_lower:
             return (
                 "**[Offline Logic Engine]**\n\n"
                 "For mathematical equations, apply standard step-by-step resolution:\n"
                 "1. Identify knowns & unknowns.\n"
-                "2. Apply relevant algebraic formula.\n"
-                "3. Compute final values.\n\n"
-                "*(Connect online for full step-by-step AI derivations)*"
+                "2. Apply relevant formula.\n"
+                "3. Compute final values."
             )
         else:
             return (
                 f"**UniMate Offline Mode**: Received your query regarding '{prompt[:50]}...'\n\n"
                 "I am currently operating on the local offline fallback engine. "
-                "For detailed AI answers, please ensure your Groq API key is valid and internet connectivity is restored."
+                "For detailed AI answers, please ensure your Groq API key is valid."
             )
