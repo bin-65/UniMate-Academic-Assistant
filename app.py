@@ -19,30 +19,34 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Inject High-Priority Custom CSS with Visible Bookshelf/Library Background Pattern
+# 2. Pure CSS Academic Library Theme (External URL Dependency Block Removed)
 st.markdown("""
     <style>
-    /* Force main container to render visible library bookshelf background pattern */
-    [data-testid="stAppViewContainer"] {
+    /* Full Page Academic Gradient + High Contrast Bookshelf Pattern */
+    .stApp {
         background-color: #f1f5f9 !important;
         background-image: 
-            linear-gradient(135deg, rgba(241, 245, 249, 0.88) 0%, rgba(226, 232, 240, 0.90) 100%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23334155' fill-opacity='0.22'%3E%3Cpath d='M10 30h16v110H10zM30 45h14v95H30zM48 20h20v120H48zM72 50h12v90H72zM88 35h16v105H88zM108 25h20v115H108zM132 40h16v100H132z'/%3E%3Cpath d='M0 140h160v6H0z'/%3E%3Ccircle cx='38' cy='20' r='6'/%3E%3C/g%3E%3C/svg%3E") !important;
+            linear-gradient(135deg, rgba(241, 245, 249, 0.85) 0%, rgba(226, 232, 240, 0.90) 100%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='%231e293b' fill-opacity='0.15'%3E%3Cpath d='M15 40h20v140H15zM40 60h18v120H40zM62 30h24v150H62zM90 70h16v110H90zM110 50h20v130H110zM134 35h22v145H134zM160 55h18v125H160zM182 45h15v135H182z'/%3E%3Cpath d='M0 180h200v8H0z'/%3E%3Ccircle cx='50' cy='25' r='8'/%3E%3Cpath d='M120 15l15 20h-30z'/%3E%3C/g%3E%3C/svg%3E") !important;
         background-repeat: repeat !important;
         background-attachment: fixed !important;
-        background-size: 160px 160px !important;
+        background-size: 180px 180px !important;
     }
 
     [data-testid="stHeader"] {
         background-color: rgba(0,0,0,0) !important;
     }
 
-    /* Soft White Cards for Text Visibility */
+    /* Soft Glass Card Panels */
     div.stCard, div[data-testid="stExpander"] {
         background-color: rgba(255, 255, 255, 0.92) !important;
         border: 1px solid #cbd5e1 !important;
         border-radius: 12px !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: rgba(255, 255, 255, 0.94) !important;
     }
 
     .main-title {
@@ -56,7 +60,7 @@ st.markdown("""
         color: #475569;
         font-size: 1.05rem;
         margin-bottom: 1.2rem;
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .status-badge-online {
@@ -82,7 +86,7 @@ st.markdown("""
 
 router = LLMRouter()
 
-# 3. Sidebar Features (Document RAG & Clear Settings Only)
+# 3. Sidebar Storage Hub
 with st.sidebar:
     st.title("⚙️ UniMate Storage")
     st.markdown("---")
@@ -102,11 +106,10 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# 4. Main Page Header
+# 4. Main Title & Connection Status
 st.markdown('<h1 class="main-title">🎓 UniMate Academic Assistant</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Hybrid Smart Learning Engine for Academic Success</p>', unsafe_allow_html=True)
 
-# Connection Status Badge
 if router.is_online():
     st.markdown('<div class="status-badge-online">🟢 System Status: Online (Groq Engine Active)</div>', unsafe_allow_html=True)
 else:
@@ -114,7 +117,7 @@ else:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 5. FRONT-END ACADEMIC TOOLS (TABS LAYOUT)
+# 5. Front-End Academic Tools (Tabs Layout)
 tab1, tab2, tab3, tab4 = st.tabs([
     "💬 Assistant Chat", 
     "📝 Quiz & MCQ Generator", 
@@ -122,7 +125,6 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "🧮 Math & Logic Solver"
 ])
 
-# Interactive Prompt Processing Function
 def handle_chat_input(prompt_text, prefix=""):
     if prompt_text:
         final_prompt = f"{prefix} {prompt_text}".strip()
@@ -136,7 +138,7 @@ def handle_chat_input(prompt_text, prefix=""):
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- TAB 1: General Assistant Chat ---
+# Tab 1: Chat
 with tab1:
     st.caption("Ask general academic queries, essay guidance, or concept clarifications.")
     for msg in st.session_state.messages:
@@ -147,28 +149,28 @@ with tab1:
         handle_chat_input(p1)
         st.rerun()
 
-# --- TAB 2: Quiz & MCQ Generator ---
+# Tab 2: Quiz
 with tab2:
     st.subheader("📝 Generate Practice Quizzes & MCQs")
-    topic = st.text_input("Enter Topic or Subject Name (e.g., Fluid Mechanics, Thermodynamics):")
+    topic = st.text_input("Enter Topic or Subject Name:")
     if st.button("Generate Quiz Now", type="primary"):
         if topic:
             handle_chat_input(topic, prefix="Create a practice quiz with 5 Multiple Choice Questions (MCQs) and detailed answer key for:")
             st.rerun()
 
-# --- TAB 3: Lecture Summarizer ---
+# Tab 3: Summarizer
 with tab3:
     st.subheader("📖 Lecture & Note Summarizer")
-    notes = st.text_area("Paste lecture text, draft notes, or topic overview here:")
+    notes = st.text_area("Paste lecture text or topic overview here:")
     if st.button("Summarize Content", type="primary"):
         if notes:
             handle_chat_input(notes, prefix="Provide a structured academic summary with key takeaways and bullet points for:")
             st.rerun()
 
-# --- TAB 4: Math & Logic Solver ---
+# Tab 4: Math Solver
 with tab4:
     st.subheader("🧮 Step-by-Step Math & Logic Solver")
-    problem = st.text_area("Enter equation, numerical problem, or logical query:")
+    problem = st.text_area("Enter equation or numerical problem:")
     if st.button("Solve Problem", type="primary"):
         if problem:
             handle_chat_input(problem, prefix="Solve the following mathematical or logical problem step-by-step with clear formulas and explanations:")
