@@ -121,19 +121,17 @@ with st.sidebar:
     st.markdown("---")
     
     # Engine Status Indicator
-    is_online_status = router.is_online()
-    if is_online_status:
+    if router.is_online():
         st.success("🟢 Engine Status: Hybrid Active")
     else:
         st.warning("🟡 Engine Status: Local Smart Mode")
         
     st.markdown("---")
     st.markdown("### 📁 Document Knowledge Base")
-    st.markdown("Upload a file (**PDF, Word, Excel**) to query its contents directly:")
+    st.markdown("Upload files (**PDF, Word, Excel**) to query and summarize directly:")
     
-    uploaded_doc = st.file_uploader("Upload Study Material", type=["pdf", "docx", "xlsx", "xls"])
+    uploaded_doc = st.file_uploader("Choose a study file", type=["pdf", "docx", "xlsx", "xls"], key="sidebar_file_uploader")
     
-    document_context = ""
     if uploaded_doc is not None:
         with st.spinner("Processing document..."):
             document_context = extract_document_text(uploaded_doc)
@@ -141,13 +139,12 @@ with st.sidebar:
             st.success(f"✅ Loaded: {uploaded_doc.name}")
             with st.expander("Preview Extracted Data"):
                 st.write(document_context[:800] + "..." if len(document_context) > 800 else document_context)
-    elif "uploaded_doc_text" in st.session_state:
-        document_context = st.session_state["uploaded_doc_text"]
+    elif "uploaded_doc_text" in st.session_state and st.session_state["uploaded_doc_text"]:
         st.info("📌 Active Document Loaded in Memory")
 
     st.markdown("---")
     st.markdown("### 💡 Quick Tips")
-    st.markdown("- Upload notes in sidebar.\n- Ask questions in Chat or Math Solver about the file!")
+    st.markdown("- Upload your notes in the sidebar above.\n- Ask questions in Chat or Math Solver about your uploaded files!")
 
 # --- Main App Title ---
 st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
@@ -186,7 +183,6 @@ with tab1:
 
         with st.chat_message("assistant"):
             with st.spinner("Analyzing with document context..."):
-                # Combine prompt with uploaded document context if available
                 active_context = st.session_state.get("uploaded_doc_text", "")
                 if active_context:
                     full_prompt = f"Context from uploaded document:\n{active_context[:4000]}\n\nUser Question: {prompt}"
@@ -210,10 +206,10 @@ with tab2:
     st.markdown("### 📝 Interactive Quiz & MCQ Generator")
     st.markdown("Test your knowledge based on subjects or your uploaded document.")
 
-    default_topic = "Uploaded Document Content" if "uploaded_doc_text" in st.session_state else "Thermodynamics"
+    default_topic = "Uploaded Document Content" if "uploaded_doc_text" in st.session_state and st.session_state["uploaded_doc_text"] else "Thermodynamics"
     subject = st.text_input("Enter Topic or Subject:", default_topic, key="quiz_subject_input")
     
-    if st.button("Generate Practice Quiz"):
+    if st.button("Generate Practice Quiz", key="generate_quiz_btn"):
         with st.spinner("Generating custom practice questions..."):
             active_context = st.session_state.get("uploaded_doc_text", "")
             if active_context:
