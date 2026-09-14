@@ -1,17 +1,8 @@
-import os
-import sys
 import streamlit as st
-
-# Path configuration
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
+import fitz  # PyMuPDF for PDF text extraction
 from llm_router import LLMRouter
-try:
-    from rag_engine import RAGEngine
-except ImportError:
-    RAGEngine = None
 
-# 1. Page Configuration
+# --- Page Configuration ---
 st.set_page_config(
     page_title="UniMate Academic Assistant",
     page_icon="🎓",
@@ -19,159 +10,175 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Pure CSS Academic Library Theme (External URL Dependency Block Removed)
+# --- Initialize Router ---
+@st.cache_resource
+def get_router():
+    return LLMRouter()
+
+router = get_router()
+
+# --- Custom Styling ---
 st.markdown("""
     <style>
-    /* Full Page Academic Gradient + High Contrast Bookshelf Pattern */
-    .stApp {
-        background-color: #f1f5f9 !important;
-        background-image: 
-            linear-gradient(135deg, rgba(241, 245, 249, 0.85) 0%, rgba(226, 232, 240, 0.90) 100%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='%231e293b' fill-opacity='0.15'%3E%3Cpath d='M15 40h20v140H15zM40 60h18v120H40zM62 30h24v150H62zM90 70h16v110H90zM110 50h20v130H110zM134 35h22v145H134zM160 55h18v125H160zM182 45h15v135H182z'/%3E%3Cpath d='M0 180h200v8H0z'/%3E%3Ccircle cx='50' cy='25' r='8'/%3E%3Cpath d='M120 15l15 20h-30z'/%3E%3C/g%3E%3C/svg%3E") !important;
-        background-repeat: repeat !important;
-        background-attachment: fixed !important;
-        background-size: 180px 180px !important;
+    .main-header {
+        font-size: 2.2rem;
+        color: #1E3A8A;
+        font-weight: 700;
+        margin-bottom: 0px;
     }
-
-    [data-testid="stHeader"] {
-        background-color: rgba(0,0,0,0) !important;
+    .sub-header {
+        font-size: 1.1rem;
+        color: #4B5563;
+        margin-bottom: 20px;
     }
-
-    /* Soft Glass Card Panels */
-    div.stCard, div[data-testid="stExpander"] {
-        background-color: rgba(255, 255, 255, 0.92) !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    section[data-testid="stSidebar"] {
-        background-color: rgba(255, 255, 255, 0.94) !important;
-    }
-
-    .main-title {
-        font-size: 2.6rem;
-        font-weight: 800;
-        color: #1e3a8a;
-        margin-bottom: 0.1rem;
-    }
-
-    .sub-title {
-        color: #475569;
-        font-size: 1.05rem;
-        margin-bottom: 1.2rem;
-        font-weight: 600;
-    }
-
-    .status-badge-online {
-        padding: 8px 16px;
-        background-color: #dcfce7;
-        border: 1px solid #86efac;
-        color: #15803d;
-        border-radius: 8px;
-        font-weight: 600;
-        display: inline-block;
-    }
-    .status-badge-offline {
-        padding: 8px 16px;
-        background-color: #fef9c3;
-        border: 1px solid #fde047;
-        color: #a16207;
-        border-radius: 8px;
-        font-weight: 600;
-        display: inline-block;
+    .stAlert {
+        border-radius: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-router = LLMRouter()
-
-# 3. Sidebar Storage Hub
+# --- Sidebar UI ---
 with st.sidebar:
-    st.title("⚙️ UniMate Storage")
+    st.markdown("### 🎓 UniMate Control Panel")
+    st.markdown("Hybrid Smart Learning Engine for Academic Success.")
     st.markdown("---")
     
-    st.subheader("📚 Library Knowledge Base")
-    uploaded_files = st.file_uploader(
-        "Upload Course PDFs / Notes",
-        type=["pdf"],
-        accept_multiple_files=True
+    # Engine Status Indicator
+    is_online_status = router.is_online()
+    if is_online_status:
+        st.success("🟢 Engine Status: Hybrid Active (Online/Local)")
+    else:
+        st.warning("🟡 Engine Status: Local Smart Mode")
+        
+    st.markdown("### 🛠️ Quick Navigation")
+    app_mode = st.radio(
+        "Select Module:",
+        ["💬 Assistant Chat", "📝 Quiz & MCQ Generator", "📖 PDF Lecture Summarizer", "🧮 Math & Logic Solver"]
     )
     
-    if uploaded_files:
-        st.success(f"Loaded {len(uploaded_files)} PDF document(s)")
-    
     st.markdown("---")
-    if st.button("🗑️ Clear Chat History", use_container_width=True):
-        st.session_state.messages = []
-        st.rerun()
+    st.markdown("### 💡 Quick Tips")
+    st.markdown("- **Thermodynamics & Laws**\n- **Engineering Calculations**\n- **PDF Notes Analysis**")
 
-# 4. Main Title & Connection Status
-st.markdown('<h1 class="main-title">🎓 UniMate Academic Assistant</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Hybrid Smart Learning Engine for Academic Success</p>', unsafe_allow_html=True)
+# --- Main App Title ---
+st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Your lightning-fast hybrid study companion for university success</p>', unsafe_allow_html=True)
 
-if router.is_online():
-    st.markdown('<div class="status-badge-online">🟢 System Status: Online (Groq Engine Active)</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="status-badge-offline">🟡 System Status: Offline (Local Engine Active)</div>', unsafe_allow_html=True)
+# ==========================================
+# MODULE 1: ASSISTANT CHAT
+# ==========================================
+if app_mode == "💬 Assistant Chat":
+    st.markdown("### 💬 Academic Chat Assistant")
+    st.markdown("Ask general academic queries, essay guidance, conceptual clarifications, or research notes.")
 
-st.markdown("<br>", unsafe_allow_html=True)
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Hello! I am UniMate. How can I help you with your studies today?", "mode": "[System]"}
+        ]
 
-# 5. Front-End Academic Tools (Tabs Layout)
-tab1, tab2, tab3, tab4 = st.tabs([
-    "💬 Assistant Chat", 
-    "📝 Quiz & MCQ Generator", 
-    "📖 Lecture Summarizer", 
-    "🧮 Math & Logic Solver"
-])
+    # Display chat history
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if "mode" in message:
+                st.caption(f"Engine Mode: {message['mode']}")
 
-def handle_chat_input(prompt_text, prefix=""):
-    if prompt_text:
-        final_prompt = f"{prefix} {prompt_text}".strip()
-        st.session_state.messages.append({"role": "user", "content": prompt_text})
-        
-        with st.spinner("Processing request..."):
-            response, mode_tag = router.get_response(final_prompt)
-            full_response = f"{response}\n\n`{mode_tag}`"
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+    # Chat Input
+    if prompt := st.chat_input("Ask any academic question (e.g., Explain First Law of Thermodynamics)..."):
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+        # Generate response using hybrid router
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response_text, mode_tag = router.get_response(prompt)
+                st.markdown(response_text)
+                st.caption(f"Engine Mode: {mode_tag}")
+                
+                # Save assistant response
+                st.session_state.messages.append({
+                    "role": "assistant", 
+                    "content": response_text, 
+                    "mode": mode_tag
+                })
 
-# Tab 1: Chat
-with tab1:
-    st.caption("Ask general academic queries, essay guidance, or concept clarifications.")
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+# ==========================================
+# MODULE 2: QUIZ & MCQ GENERATOR
+# ==========================================
+elif app_mode == "📝 Quiz & MCQ Generator":
+    st.markdown("### 📝 Interactive Quiz & MCQ Generator")
+    st.markdown("Test your knowledge instantly on any academic subject.")
+
+    subject = st.text_input("Enter Subject or Topic (e.g., Thermodynamics, Data Structures, Cyber Law):", "Thermodynamics")
+    
+    if st.button("Generate Practice Quiz"):
+        with st.spinner("Generating custom practice questions..."):
+            quiz_prompt = f"Generate 3 multiple-choice questions (MCQs) with answers and brief explanations for university students on the topic: {subject}"
+            response_text, mode_tag = router.get_response(quiz_prompt)
             
-    if p1 := st.chat_input("Ask UniMate anything...", key="chat_tab1"):
-        handle_chat_input(p1)
-        st.rerun()
+            st.markdown("---")
+            st.markdown("### 📋 Generated Practice Quiz")
+            st.markdown(response_text)
+            st.caption(f"Engine Mode: {mode_tag}")
 
-# Tab 2: Quiz
-with tab2:
-    st.subheader("📝 Generate Practice Quizzes & MCQs")
-    topic = st.text_input("Enter Topic or Subject Name:")
-    if st.button("Generate Quiz Now", type="primary"):
-        if topic:
-            handle_chat_input(topic, prefix="Create a practice quiz with 5 Multiple Choice Questions (MCQs) and detailed answer key for:")
-            st.rerun()
+# ==========================================
+# MODULE 3: PDF LECTURE SUMMARIZER
+# ==========================================
+elif app_mode == "📖 PDF Lecture Summarizer":
+    st.markdown("### 📖 PDF Lecture Notes & Document Summarizer")
+    st.markdown("Upload your semester notes, research papers, or study guides to extract key insights instantly.")
 
-# Tab 3: Summarizer
-with tab3:
-    st.subheader("📖 Lecture & Note Summarizer")
-    notes = st.text_area("Paste lecture text or topic overview here:")
-    if st.button("Summarize Content", type="primary"):
-        if notes:
-            handle_chat_input(notes, prefix="Provide a structured academic summary with key takeaways and bullet points for:")
-            st.rerun()
+    uploaded_file = st.file_uploader("Upload PDF Document", type=["pdf"])
+    
+    if uploaded_file is not None:
+        with st.spinner("Reading document pages..."):
+            try:
+                file_bytes = uploaded_file.read()
+                doc = fitz.open(stream=file_bytes, filetype="pdf")
+                
+                text_content = ""
+                for page_num in range(len(doc)):
+                    page = doc.load_page(page_num)
+                    text_content += page.get_text()
+                
+                total_words = len(text_content.split())
+                
+                st.success(f"Document Processed Successfully! | Pages: {len(doc)} | Total Words: {total_words}")
+                
+                with st.expander("🔍 View Raw Text Preview"):
+                    st.write(text_content[:1500] + "..." if len(text_content) > 1500 else text_content)
+                    
+                if st.button("Extract Key Summary & Action Items"):
+                    with st.spinner("Synthesizing core academic takeaways..."):
+                        summary_prompt = f"Summarize the following academic notes into key bullet points and exam revision notes:\n\n{text_content[:4000]}"
+                        response_text, mode_tag = router.get_response(summary_prompt)
+                        
+                        st.markdown("---")
+                        st.markdown("### 📝 Smart Summary & Key Takeaways")
+                        st.markdown(response_text)
+                        st.caption(f"Engine Mode: {mode_tag}")
+                        
+            except Exception as e:
+                st.error(f"Error reading PDF file: {str(e)}")
 
-# Tab 4: Math Solver
-with tab4:
-    st.subheader("🧮 Step-by-Step Math & Logic Solver")
-    problem = st.text_area("Enter equation or numerical problem:")
-    if st.button("Solve Problem", type="primary"):
-        if problem:
-            handle_chat_input(problem, prefix="Solve the following mathematical or logical problem step-by-step with clear formulas and explanations:")
-            st.rerun()
+# ==========================================
+# MODULE 4: MATH & LOGIC SOLVER
+# ==========================================
+elif app_mode == "🧮 Math & Logic Solver":
+    st.markdown("### 🧮 Math, Formula & Engineering Logic Solver")
+    st.markdown("Step-by-step breakdown of equations, formulas, and technical problem statements.")
+
+    math_query = st.text_area("Enter Math/Engineering Problem or Formula Question:", "Explain the formula for First Law of Thermodynamics and solve a sample problem.")
+    
+    if st.button("Solve Step-by-Step"):
+        with st.spinner("Solving problem with step-by-step logic..."):
+            solver_prompt = f"Provide a detailed step-by-step mathematical or logical solution for: {math_query}"
+            response_text, mode_tag = router.get_response(solver_prompt)
+            
+            st.markdown("---")
+            st.markdown("### 📐 Step-by-Step Solution")
+            st.markdown(response_text)
+            st.caption(f"Engine Mode: {mode_tag}")
