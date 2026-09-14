@@ -19,54 +19,48 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Light Professional Theme with Full Screen Library Watermark Pattern
+# 2. Inject High-Priority Custom CSS with Visible Bookshelf/Library Background Pattern
 st.markdown("""
     <style>
-    /* Global Light Professional Theme */
-    html, body, .stApp {
+    /* Force main container to render visible library bookshelf background pattern */
+    [data-testid="stAppViewContainer"] {
         background-color: #f1f5f9 !important;
-        /* Full Screen Repeatable Library & Study SVG Watermark Pattern */
         background-image: 
-            linear-gradient(135deg, rgba(248, 250, 252, 0.82) 0%, rgba(226, 232, 240, 0.85) 100%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23475569' fill-opacity='0.12'%3E%3Cpath d='M10 25h12v65H10zM25 35h10v55H25zM38 18h14v72H38zM55 40h8v50h-8zM66 28h12v62H66zM81 20h14v70H81zM98 32h10v58H98z'/%3E%3Ccircle cx='30' cy='15' r='5'/%3E%3Cpath d='M60 10l10 12H50z'/%3E%3C/g%3E%3C/svg%3E") !important;
+            linear-gradient(135deg, rgba(241, 245, 249, 0.88) 0%, rgba(226, 232, 240, 0.90) 100%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23334155' fill-opacity='0.22'%3E%3Cpath d='M10 30h16v110H10zM30 45h14v95H30zM48 20h20v120H48zM72 50h12v90H72zM88 35h16v105H88zM108 25h20v115H108zM132 40h16v100H132z'/%3E%3Cpath d='M0 140h160v6H0z'/%3E%3Ccircle cx='38' cy='20' r='6'/%3E%3C/g%3E%3C/svg%3E") !important;
         background-repeat: repeat !important;
         background-attachment: fixed !important;
-        background-size: 140px 140px !important;
-        color: #0f172a !important;
+        background-size: 160px 160px !important;
     }
 
-    /* Soft Glassmorphism Cards */
-    div[data-testid="stExpander"], div.stCard, section[data-testid="stSidebar"] {
-        background-color: rgba(255, 255, 255, 0.88) !important;
-        border: 1px solid rgba(203, 213, 225, 0.9) !important;
-        border-radius: 14px !important;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+    [data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0) !important;
     }
 
-    /* Sidebar Background Integration */
-    section[data-testid="stSidebar"] {
-        background-color: rgba(248, 250, 252, 0.92) !important;
+    /* Soft White Cards for Text Visibility */
+    div.stCard, div[data-testid="stExpander"] {
+        background-color: rgba(255, 255, 255, 0.92) !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
-    /* Professional Soft Typography */
     .main-title {
-        font-size: 2.7rem;
+        font-size: 2.6rem;
         font-weight: 800;
         color: #1e3a8a;
         margin-bottom: 0.1rem;
-        letter-spacing: -0.5px;
     }
 
     .sub-title {
         color: #475569;
         font-size: 1.05rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.2rem;
         font-weight: 500;
     }
 
-    /* Status Badges - Light Soft Colors */
     .status-badge-online {
-        padding: 8px 18px;
+        padding: 8px 16px;
         background-color: #dcfce7;
         border: 1px solid #86efac;
         color: #15803d;
@@ -75,7 +69,7 @@ st.markdown("""
         display: inline-block;
     }
     .status-badge-offline {
-        padding: 8px 18px;
+        padding: 8px 16px;
         background-color: #fef9c3;
         border: 1px solid #fde047;
         color: #a16207;
@@ -88,26 +82,11 @@ st.markdown("""
 
 router = LLMRouter()
 
-# 3. Sidebar Controls & Academic Multi-Tools
+# 3. Sidebar Features (Document RAG & Clear Settings Only)
 with st.sidebar:
-    st.title("⚙️ UniMate Controls")
+    st.title("⚙️ UniMate Storage")
     st.markdown("---")
     
-    # Tool Selector
-    st.subheader("🎯 Academic Tools")
-    selected_tool = st.selectbox(
-        "Select Mode / Feature",
-        [
-            "💬 General Assistant Chat",
-            "📝 Quiz & MCQ Generator",
-            "📖 Lecture & Note Summarizer",
-            "🧮 Math & Logic Problem Solver"
-        ]
-    )
-    
-    st.markdown("---")
-    
-    # Document RAG Upload Section
     st.subheader("📚 Library Knowledge Base")
     uploaded_files = st.file_uploader(
         "Upload Course PDFs / Notes",
@@ -119,16 +98,15 @@ with st.sidebar:
         st.success(f"Loaded {len(uploaded_files)} PDF document(s)")
     
     st.markdown("---")
-    
     if st.button("🗑️ Clear Chat History", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
-# 4. Main App Interface Header
+# 4. Main Page Header
 st.markdown('<h1 class="main-title">🎓 UniMate Academic Assistant</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Hybrid Smart Learning Engine for Academic Success</p>', unsafe_allow_html=True)
 
-# Connection Badge
+# Connection Status Badge
 if router.is_online():
     st.markdown('<div class="status-badge-online">🟢 System Status: Online (Groq Engine Active)</div>', unsafe_allow_html=True)
 else:
@@ -136,33 +114,62 @@ else:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 5. Session State Initializer
+# 5. FRONT-END ACADEMIC TOOLS (TABS LAYOUT)
+tab1, tab2, tab3, tab4 = st.tabs([
+    "💬 Assistant Chat", 
+    "📝 Quiz & MCQ Generator", 
+    "📖 Lecture Summarizer", 
+    "🧮 Math & Logic Solver"
+])
+
+# Interactive Prompt Processing Function
+def handle_chat_input(prompt_text, prefix=""):
+    if prompt_text:
+        final_prompt = f"{prefix} {prompt_text}".strip()
+        st.session_state.messages.append({"role": "user", "content": prompt_text})
+        
+        with st.spinner("Processing request..."):
+            response, mode_tag = router.get_response(final_prompt)
+            full_response = f"{response}\n\n`{mode_tag}`"
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display Chat History
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# --- TAB 1: General Assistant Chat ---
+with tab1:
+    st.caption("Ask general academic queries, essay guidance, or concept clarifications.")
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+            
+    if p1 := st.chat_input("Ask UniMate anything...", key="chat_tab1"):
+        handle_chat_input(p1)
+        st.rerun()
 
-# 6. Interactive Prompt Handling with Dynamic Tool Prompting
-if prompt := st.chat_input("Ask a question, generate quiz, or summarize notes..."):
-    
-    # Feature Prompt Routing
-    final_prompt = prompt
-    if selected_tool == "📝 Quiz & MCQ Generator":
-        final_prompt = f"Create a practice quiz with 5 Multiple Choice Questions (MCQs) and detailed answers for: {prompt}"
-    elif selected_tool == "📖 Lecture & Note Summarizer":
-        final_prompt = f"Provide a clean, structured summary with key points for the following content: {prompt}"
-    elif selected_tool == "🧮 Math & Logic Problem Solver":
-        final_prompt = f"Solve this math/logic problem step-by-step with clear explanations: {prompt}"
+# --- TAB 2: Quiz & MCQ Generator ---
+with tab2:
+    st.subheader("📝 Generate Practice Quizzes & MCQs")
+    topic = st.text_input("Enter Topic or Subject Name (e.g., Fluid Mechanics, Thermodynamics):")
+    if st.button("Generate Quiz Now", type="primary"):
+        if topic:
+            handle_chat_input(topic, prefix="Create a practice quiz with 5 Multiple Choice Questions (MCQs) and detailed answer key for:")
+            st.rerun()
 
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# --- TAB 3: Lecture Summarizer ---
+with tab3:
+    st.subheader("📖 Lecture & Note Summarizer")
+    notes = st.text_area("Paste lecture text, draft notes, or topic overview here:")
+    if st.button("Summarize Content", type="primary"):
+        if notes:
+            handle_chat_input(notes, prefix="Provide a structured academic summary with key takeaways and bullet points for:")
+            st.rerun()
 
-    with st.chat_message("assistant"):
-        response, mode_tag = router.get_response(final_prompt)
-        full_response = f"{response}\n\n`{mode_tag}`"
-        st.markdown(full_response)
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+# --- TAB 4: Math & Logic Solver ---
+with tab4:
+    st.subheader("🧮 Step-by-Step Math & Logic Solver")
+    problem = st.text_area("Enter equation, numerical problem, or logical query:")
+    if st.button("Solve Problem", type="primary"):
+        if problem:
+            handle_chat_input(problem, prefix="Solve the following mathematical or logical problem step-by-step with clear formulas and explanations:")
+            st.rerun()
