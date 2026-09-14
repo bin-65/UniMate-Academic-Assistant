@@ -15,8 +15,15 @@ class LLMRouter:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "")
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
-        # Updated to currently active Groq model
-        self.model_name = "llama-3.1-8b-instant"
+        
+        # Comprehensive model list to auto-bypass any 404 model not found errors
+        self.models_to_try = [
+            "llama-3.3-70b-versatile",
+            "llama-3.1-70b-versatile",
+            "llama3-70b-8192",
+            "mixtral-8x7b-32768",
+            "gemma2-9b-it"
+        ]
 
     def is_online(self) -> bool:
         return True
@@ -31,7 +38,6 @@ class LLMRouter:
         }
         
         payload = {
-            "model": self.model_name,
             "messages": [
                 {"role": "system", "content": "You are UniMate, an expert academic assistant."},
                 {"role": "user", "content": prompt}
@@ -40,14 +46,17 @@ class LLMRouter:
             "max_tokens": 1024
         }
 
-        try:
-            response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                return data['choices'][0]['message']['content'], "[Online Mode]"
-            else:
-                return f"**Groq API Error ({response.status_code}):** {response.text}", "[API Error]"
-        except requests.exceptions.Timeout:
-            return "**Network Timeout:** Groq API took too long to respond.", "[Timeout Error]"
-        except Exception as e:
-            return f"**Exception:** {str(e)}", "[Error]"
+        error_logs = []
+        for model_name in self.models_to_try:
+            payload["model"] = model_name
+            try:
+                response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    return data['choices'][0]['message']['content'], f"[Online Mode]"
+                else:
+                    error_logs.append(f"{model_name}: {response.status_code}")
+            except Exception as e:
+                error_logs.append(f"{model_name}: Error")
+
+        return f"**Groq API Error:** All fallback models tried. Details: {', '.join(error_logs)}", "[API Error]"
