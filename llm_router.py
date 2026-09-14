@@ -14,8 +14,6 @@ class LLMRouter:
         if not self.groq_api_key:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
             
-        print(f"DEBUG: Loaded API Key length -> {len(self.groq_api_key)}")
-            
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         self.ollama_url = "http://127.0.0.1:11434/api/generate"
 
@@ -29,7 +27,7 @@ class LLMRouter:
                 "Content-Type": "application/json"
             }
             payload = {
-                "model": "llama3-8b-8192",
+                "model": "llama-3.1-8b-instant",
                 "messages": [
                     {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
                     {"role": "user", "content": prompt}
@@ -40,14 +38,13 @@ class LLMRouter:
 
             try:
                 response = requests.post(self.groq_url, headers=headers, json=payload, timeout=15.0)
-                print(f"DEBUG: Groq Response Status Code -> {response.status_code}")
                 if response.status_code == 200:
                     data = response.json()
                     return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
                 else:
-                    print(f"DEBUG: Groq Error Body -> {response.text}")
+                    print(f"Groq API Error {response.status_code}: {response.text}")
             except Exception as e:
-                print(f"DEBUG: Groq Connection Exception -> {str(e)}")
+                print(f"Groq Connection Failed: {str(e)}")
 
         # Fallback to Ollama
         try:
@@ -63,4 +60,4 @@ class LLMRouter:
         except Exception as e:
             pass
 
-        return "**[Connection Error]** Both Groq and Ollama failed. Check terminal for details.", "[Error Mode]"
+        return "**[Connection Error]** Both Groq and Ollama failed. Please check your API key.", "[Error Mode]"
