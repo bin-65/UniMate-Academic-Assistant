@@ -15,6 +15,8 @@ class LLMRouter:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "")
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
+        # Updated to currently active Groq model
+        self.model_name = "llama-3.1-8b-instant"
 
     def is_online(self) -> bool:
         return True
@@ -29,18 +31,17 @@ class LLMRouter:
         }
         
         payload = {
-            "model": "llama3-8b-8192",
+            "model": self.model_name,
             "messages": [
                 {"role": "system", "content": "You are UniMate, an expert academic assistant."},
                 {"role": "user", "content": prompt}
             ],
             "temperature": 0.7,
-            "max_tokens": 256
+            "max_tokens": 1024
         }
 
         try:
-            # Short timeout to prevent infinite loading
-            response = requests.post(self.groq_url, headers=headers, json=payload, timeout=5)
+            response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 return data['choices'][0]['message']['content'], "[Online Mode]"
