@@ -1,18 +1,10 @@
 import os
 import requests
-import streamlit as st
 
 class LLMRouter:
     def __init__(self):
-        self.groq_api_key = ""
-        try:
-            if "GROQ_API_KEY" in st.secrets:
-                self.groq_api_key = str(st.secrets["GROQ_API_KEY"]).strip()
-        except Exception:
-            pass
-            
-        if not self.groq_api_key:
-            self.groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
+        # Yahan apni asli Groq API key direct paste kar dein
+        self.groq_api_key = "gsk_yahan_apni_asli_key_dal_do"
             
         print(f"DEBUG: Key Loaded -> {self.groq_api_key[:6]}... (Length: {len(self.groq_api_key)})")
             
