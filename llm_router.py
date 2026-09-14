@@ -16,6 +16,7 @@ class LLMRouter:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
+        self.ollama_url = "http://localhost:11434/api/generate"
         self.executor = ThreadPoolExecutor(max_workers=2)
 
     def is_online(self) -> bool:
@@ -36,9 +37,9 @@ class LLMRouter:
         global prompt_text_global
         prompt_text_global = prompt
 
-        # Agar API key nahi hai, toh seedha local engine
+        # Agar API key nahi hai, toh seedha local Ollama engine
         if not self.groq_api_key:
-            return self._local_engine(prompt), "[Offline Mode]"
+            return self._local_engine(prompt), "[Offline Mode (Ollama)]"
 
         headers = {
             "Authorization": f"Bearer {self.groq_api_key}",
@@ -59,45 +60,25 @@ class LLMRouter:
             future = self.executor.submit(self._call_groq_api, payload, headers)
             return future.result(timeout=3.0)
         except (TimeoutError, Exception):
-            return self._local_engine(prompt), "[Hybrid Fallback Mode (Offline)]"
+            return self._local_engine(prompt), "[Hybrid Fallback Mode (Offline Ollama)]"
 
     def _local_engine(self, prompt: str) -> str:
-        prompt_lower = prompt.lower()
-        
-        # Check if document context was passed
-        if "context from uploaded document:" in prompt_lower:
-            parts = prompt.split("User Question:")
-            doc_snippet = parts[0][:500] if len(parts) > 0 else "document"
-            user_q = parts[1] if len(parts) > 1 else prompt
+        try:
+            # Ollama local call (llama3:latest)
+            payload = {
+                "model": "llama3:latest",
+                "prompt": f"You are UniMate, an expert academic assistant for university students. Answer the following query clearly:\n\n{prompt}",
+                "stream": False
+            }
+            response = requests.post(self.ollama_url, json=payload, timeout=15.0)
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("response", "No response generated from Ollama.")
+            else:
+                return f"**[Local Engine Error]** Ollama responded with status code {response.status_code}"
+        except Exception as e:
             return (
-                f"**[UniMate Hybrid Local Engine - Document Analysis]**\n\n"
-                f"Based on the uploaded file and your query (*'{user_q.strip()}'*):\n\n"
-                "• **Analysis**: The document has been successfully processed in memory.\n"
-                "• **Key Insight**: Content highlights primary academic notes, definitions, and structured points.\n"
-                "• **Recommendation**: Review the highlighted sections in your notes or use the Summarizer tab for a complete breakdown."
-            )
-        elif "thermodynamics" in prompt_lower or "first law" in prompt_lower:
-            return (
-                "**First Law of Thermodynamics (Energy Conservation):**\n\n"
-                "• **Principle**: Energy can neither be created nor destroyed; it can only be transformed.\n"
-                "• **Equation**: $\\Delta U = Q - W$\n"
-                "  - $\\Delta U$: Change in internal energy\n"
-                "  - $Q$: Heat added to the system\n"
-                "  - $W$: Work done by the system"
-            )
-        elif "quiz" in prompt_lower or "mcq" in prompt_lower:
-            return (
-                "**[Academic Practice Quiz Generator]**\n\n"
-                "1. Which law states that energy cannot be created or destroyed?\n"
-                "   - A) Zeroth Law\n"
-                "   - B) First Law of Thermodynamics\n"
-                "   - C) Second Law\n"
-                "   - D) Third Law\n\n"
-                "**Correct Answer: B**"
-            )
-        else:
-            return (
-                f"**UniMate Hybrid Local Engine**: Processed your request offline.\n\n"
-                f"• **Query**: *'{prompt[:60]}...'*\n"
-                "• **Status**: Running smoothly on local smart knowledge base without internet."
+                f"**[UniMate Offline Mode]**\n\n"
+                f"Could not reach local Ollama server. Make sure `ollama serve` is running.\n"
+                f"• **Error Details**: {str(e)}"
             )
