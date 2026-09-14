@@ -17,22 +17,83 @@ def get_router():
 
 router = get_router()
 
-# --- Custom Styling ---
+# --- Professional Library & Books Background Styling (Glassmorphism UI) ---
 st.markdown("""
     <style>
+    /* Main App Background with Professional Library / Books Theme */
+    .stApp {
+        background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.90)), 
+                          url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    /* Custom Header Styling */
     .main-header {
-        font-size: 2.2rem;
-        color: #1E3A8A;
-        font-weight: 700;
+        font-size: 2.4rem;
+        color: #F8FAFC;
+        font-weight: 800;
         margin-bottom: 0px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
     }
     .sub-header {
-        font-size: 1.1rem;
-        color: #4B5563;
-        margin-bottom: 20px;
+        font-size: 1.15rem;
+        color: #94A3B8;
+        margin-bottom: 25px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }
-    .stAlert {
-        border-radius: 10px;
+
+    /* Glassmorphism Effect for Containers / Cards */
+    div.block-container {
+        background: rgba(30, 41, 59, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        color: #F1F5F9;
+    }
+
+    /* Sidebar Professional Styling */
+    section[data-testid="stSidebar"] {
+        background-color: rgba(15, 23, 42, 0.95);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    section[data-testid="stSidebar"] .block-container {
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Typography & Inputs Color Adjustments for Dark Glass Theme */
+    h1, h2, h3, h4, h5, h6, p, span, label {
+        color: #F1F5F9 !important;
+    }
+    
+    .stTextInput input, .stTextArea textarea, .stSelectbox select {
+        background-color: rgba(15, 23, 42, 0.6) !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 8px !important;
+    }
+
+    /* Buttons Styling */
+    .stButton button {
+        background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        transition: all 0.3s ease;
+    }
+    .stButton button:hover {
+        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -46,7 +107,7 @@ with st.sidebar:
     # Engine Status Indicator
     is_online_status = router.is_online()
     if is_online_status:
-        st.success("🟢 Engine Status: Hybrid Active (Online/Local)")
+        st.success("🟢 Engine Status: Hybrid Active")
     else:
         st.warning("🟡 Engine Status: Local Smart Mode")
         
