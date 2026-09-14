@@ -2,7 +2,7 @@ import os
 import sys
 import streamlit as st
 
-# Ensure root directory is in python path
+# Path configuration
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from llm_router import LLMRouter
@@ -19,31 +19,37 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Custom Styling & Background Design
+# 2. Custom CSS with Background Watermark & Academic Theme
 st.markdown("""
     <style>
-    /* Gradient Background */
+    /* Dark Academic Theme Background with Watermark SVG Pattern */
     .stApp {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        background-color: #0f172a;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0),
+                          url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20h10v60H20zM35 30h10v50H35zM50 15h10v65H50zM65 25h10v55H65zM80 35h10v45H80z' fill='%23ffffff' fill-opacity='0.02'/%3E%3C/svg%3E");
+        background-size: 24px 24px, 200px 200px;
         color: #f8fafc;
     }
-    /* Card Container Styling */
+    
+    /* Card Glassmorphism Effect */
     div[data-testid="stExpander"], div.stCard {
-        background-color: rgba(30, 41, 59, 0.7);
+        background-color: rgba(30, 41, 59, 0.75);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(8px);
     }
-    /* Custom Title Style */
+
+    /* Main Title Styling */
     .main-title {
-        font-size: 2.6rem;
+        font-size: 2.8rem;
         font-weight: 800;
         background: linear-gradient(90deg, #38bdf8, #818cf8);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0.2rem;
     }
-    /* Status Badge */
+
+    /* Status Badges */
     .status-badge-online {
         padding: 8px 16px;
         background-color: rgba(34, 197, 94, 0.15);
@@ -51,6 +57,7 @@ st.markdown("""
         color: #4ade80;
         border-radius: 8px;
         font-weight: 600;
+        display: inline-block;
     }
     .status-badge-offline {
         padding: 8px 16px;
@@ -59,70 +66,91 @@ st.markdown("""
         color: #fde047;
         border-radius: 8px;
         font-weight: 600;
+        display: inline-block;
     }
     </style>
 """, unsafe_allow_html=True)
 
 router = LLMRouter()
 
-# 3. Sidebar Features
+# 3. Sidebar Controls & Multi-Feature Hub
 with st.sidebar:
-    st.title("⚙️ UniMate Controls")
+    st.title("⚙️ UniMate Academic Hub")
     st.markdown("---")
     
-    # Document RAG Section
-    st.subheader("📚 Academic RAG Documents")
+    # Feature 1: Academic Tool Selector
+    st.subheader("🎯 Academic Tools")
+    selected_tool = st.selectbox(
+        "Select Mode / Tool",
+        [
+            "💬 General Assistant Chat",
+            "📝 Quiz & MCQ Generator",
+            "📖 Lecture & Note Summarizer",
+            "🧮 Math & Logic Problem Solver"
+        ]
+    )
+    
+    st.markdown("---")
+    
+    # Feature 2: PDF RAG Upload
+    st.subheader("📚 RAG Knowledge Base")
     uploaded_files = st.file_uploader(
         "Upload Course PDFs / Notes",
         type=["pdf"],
         accept_multiple_files=True
     )
     
-    if uploaded_files and RAGEngine:
-        st.success(f"Uploaded {len(uploaded_files)} document(s)")
+    if uploaded_files:
+        st.success(f"Loaded {len(uploaded_files)} PDF document(s)")
     
     st.markdown("---")
-    st.subheader("💡 Features Active")
-    st.markdown("""
-    - ⚡ **Auto-Switching Hybrid Router**
-    - 📄 **PDF Vector Search & Retrieval**
-    - 🎓 **Academic Subject Specialist Prompting**
-    """)
     
-    if st.button("Clear Chat History", use_container_width=True):
+    if st.button("🗑️ Clear Chat History", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
-# 4. Main App Interface
+# 4. Main Interface Header
 st.markdown('<h1 class="main-title">🎓 UniMate Academic Assistant</h1>', unsafe_allow_html=True)
-st.caption("Hybrid Online/Offline AI Assistant for Academic Success")
+st.caption("Hybrid Smart Learning Engine for Academic Success")
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Connection Status Banner
+# Connection Badge
 if router.is_online():
-    st.markdown('<div class="status-badge-online">🟢 System Status: Online (Groq API Active)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-badge-online">🟢 System Status: Online (Groq Engine Active)</div>', unsafe_allow_html=True)
 else:
-    st.markdown('<div class="status-badge-offline">🟡 System Status: Offline (Local Engine Fallback Active)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-badge-offline">🟡 System Status: Offline (Local Engine Active)</div>', unsafe_allow_html=True)
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-# Session Chat State
+# 5. Session State Initializer
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display Messages
+# Display Chat History
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# User Input Prompt
-if prompt := st.chat_input("Ask UniMate anything or analyze uploaded documents..."):
+# 6. Interactive Prompt Handling with Dynamic Tool Prompting
+if prompt := st.chat_input("Ask a question, request a quiz, or summarize notes..."):
+    
+    # Tool-Specific Prompt Enhancements
+    final_prompt = prompt
+    if selected_tool == "📝 Quiz & MCQ Generator":
+        final_prompt = f"Create a practice quiz with 5 Multiple Choice Questions (MCQs) and answers based on this topic: {prompt}"
+    elif selected_tool == "📖 Lecture & Note Summarizer":
+        final_prompt = f"Provide a structured summary with key bullet points and main concepts for the following content: {prompt}"
+    elif selected_tool == "🧮 Math & Logic Problem Solver":
+        final_prompt = f"Solve the following mathematical or logical problem step-by-step with clear explanations: {prompt}"
+
+    # Append user prompt
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # Process response
     with st.chat_message("assistant"):
-        response, mode_tag = router.get_response(prompt)
+        response, mode_tag = router.get_response(final_prompt)
         full_response = f"{response}\n\n`{mode_tag}`"
         st.markdown(full_response)
         st.session_state.messages.append({"role": "assistant", "content": full_response})
