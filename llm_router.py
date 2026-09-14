@@ -29,7 +29,8 @@ class LLMRouter:
                 data = response.json()
                 return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
             else:
-                return f"**[Groq API Error]** Status code {response.status_code}: {response.text}", "[Error Mode]"
+                # If Groq throws any error, fall back gracefully to local engine instead of breaking
+                return self._local_engine(prompt_text_global), f"[Hybrid Fallback Mode (Groq Error {response.status_code})] "
         except Exception as e:
             return self._local_engine(prompt_text_global), f"[Hybrid Fallback Mode (Offline due to: {str(e)})]"
 
@@ -46,7 +47,7 @@ class LLMRouter:
         }
         
         payload = {
-            "model": "llama3-8b-8192",  # Stable Groq model identifier
+            "model": "llama-3.3-70b-versatile",  # Groq's active and stable current model
             "messages": [
                 {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
                 {"role": "user", "content": prompt}
