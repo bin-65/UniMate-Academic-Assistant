@@ -21,7 +21,13 @@ class LLMRouter:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "")
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model_name = "llama-3.1-8b-instant"
+        
+        # List of models to try automatically so it never fails on model-not-found
+        self.models_to_try = [
+            "llama3-8b-8192",
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile"
+        ]
 
     def is_online(self) -> bool:
         """Check internet & API key presence"""
@@ -35,41 +41,42 @@ class LLMRouter:
 
     def get_response(self, prompt: str) -> tuple[str, str]:
         """Route query to Groq API or Local Fallback Engine"""
-        if self.is_online():
+        if not self.groq_api_key:
+            return (
+                "**[Configuration Notice]** `GROQ_API_KEY` was not found in Streamlit Secrets.\n\n"
+                "Please add your key in **Streamlit Cloud Dashboard -> Settings -> Secrets**.",
+                "[Missing Key]"
+            )
+
+        headers = {
+            "Authorization": f"Bearer {self.groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "messages": [
+                {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 1024
+        }
+
+        # Try models sequentially until one works
+        last_error = ""
+        for model_name in self.models_to_try:
+            payload["model"] = model_name
             try:
-                headers = {
-                    "Authorization": f"Bearer {self.groq_api_key}",
-                    "Content-Type": "application/json"
-                }
-                payload = {
-                    "model": self.model_name,
-                    "messages": [
-                        {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.7,
-                    "max_tokens": 1024
-                }
-                
                 response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10)
                 if response.status_code == 200:
                     data = response.json()
                     return data['choices'][0]['message']['content'], "[Online Mode]"
                 else:
-                    return f"**Groq API Error ({response.status_code}):** {response.text}", "[API Error Mode]"
+                    last_error = f"Model {model_name} error ({response.status_code}): {response.text}"
             except Exception as e:
-                return f"**Connection Exception:** {str(e)}", "[Network Error Mode]"
+                last_error = str(e)
 
-        # If key is completely missing, show exact warning instead of silent fallback
-        if not self.groq_api_key:
-            return (
-                "**[Configuration Notice]** `GROQ_API_KEY` was not found in Streamlit Secrets.\n\n"
-                "Please go to your **Streamlit Cloud Dashboard -> Settings -> Secrets** and paste your key like this:\n"
-                "```toml\nGROQ_API_KEY = \"gsk_your_actual_key_here\"\n```\n"
-                "Then click **Save** and **Reboot app**."
-            ), "[Missing Key]"
-
-        # Local Offline Fallback Engine (when internet is disconnected)
+        # If all online models fail, fallback gracefully
         return self._offline_fallback_response(prompt), "[Offline Mode]"
 
     def _offline_fallback_response(self, prompt: str) -> str:
