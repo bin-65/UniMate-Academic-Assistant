@@ -17,12 +17,12 @@ def get_router():
 
 router = get_router()
 
-# --- Professional Library & Books Background Styling (Glassmorphism UI) ---
+# --- Light Professional Library & Study Platform Styling ---
 st.markdown("""
     <style>
-    /* Main App Background with Professional Library / Books Theme */
+    /* Main App Background with Light University Library Theme */
     .stApp {
-        background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.90)), 
+        background-image: linear-gradient(rgba(248, 250, 252, 0.90), rgba(241, 245, 249, 0.94)), 
                           url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop');
         background-size: cover;
         background-position: center;
@@ -32,34 +32,32 @@ st.markdown("""
     /* Custom Header Styling */
     .main-header {
         font-size: 2.4rem;
-        color: #F8FAFC;
+        color: #1E3A8A !important;
         font-weight: 800;
         margin-bottom: 0px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
     }
     .sub-header {
         font-size: 1.15rem;
-        color: #94A3B8;
+        color: #475569 !important;
         margin-bottom: 25px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }
 
-    /* Glassmorphism Effect for Containers / Cards */
+    /* Light Glassmorphism Container for Content */
     div.block-container {
-        background: rgba(30, 41, 59, 0.75);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(226, 232, 240, 0.9);
         border-radius: 16px;
         padding: 2.5rem;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        color: #F1F5F9;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        color: #1E293B;
     }
 
-    /* Sidebar Professional Styling */
+    /* Sidebar Styling */
     section[data-testid="stSidebar"] {
-        background-color: rgba(15, 23, 42, 0.95);
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        background-color: rgba(241, 245, 249, 0.95);
+        border-right: 1px solid rgba(203, 213, 225, 0.6);
     }
     section[data-testid="stSidebar"] .block-container {
         background: transparent;
@@ -68,37 +66,37 @@ st.markdown("""
         box-shadow: none;
     }
 
-    /* Typography & Inputs Color Adjustments for Dark Glass Theme */
+    /* Typography & Inputs for Light Theme */
     h1, h2, h3, h4, h5, h6, p, span, label {
-        color: #F1F5F9 !important;
+        color: #0F172A !important;
     }
     
     .stTextInput input, .stTextArea textarea, .stSelectbox select {
-        background-color: rgba(15, 23, 42, 0.6) !important;
-        color: #FFFFFF !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid #CBD5E1 !important;
         border-radius: 8px !important;
     }
 
     /* Buttons Styling */
     .stButton button {
-        background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         color: white;
         font-weight: 600;
         border: none;
         border-radius: 8px;
         padding: 0.5rem 1rem;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
         transition: all 0.3s ease;
     }
     .stButton button:hover {
-        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+        background: linear-gradient(135deg, #1D4ED8 100%, #1E40AF 100%);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Sidebar UI ---
+# --- Sidebar Info ---
 with st.sidebar:
     st.markdown("### 🎓 UniMate Control Panel")
     st.markdown("Hybrid Smart Learning Engine for Academic Success.")
@@ -111,24 +109,26 @@ with st.sidebar:
     else:
         st.warning("🟡 Engine Status: Local Smart Mode")
         
-    st.markdown("### 🛠️ Quick Navigation")
-    app_mode = st.radio(
-        "Select Module:",
-        ["💬 Assistant Chat", "📝 Quiz & MCQ Generator", "📖 PDF Lecture Summarizer", "🧮 Math & Logic Solver"]
-    )
-    
     st.markdown("---")
-    st.markdown("### 💡 Quick Tips")
-    st.markdown("- **Thermodynamics & Laws**\n- **Engineering Calculations**\n- **PDF Notes Analysis**")
+    st.markdown("### 💡 Study Quick Tips")
+    st.markdown("- **Chat**: Ask conceptual questions\n- **Quiz**: Test your knowledge\n- **PDF**: Summarize notes instantly\n- **Math**: Step-by-step problem solver")
 
 # --- Main App Title ---
 st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Your lightning-fast hybrid study companion for university success</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Your lightning-fast hybrid study platform for university success</p>', unsafe_allow_html=True)
+
+# --- Front-and-Center Feature Tabs ---
+tab1, tab2, tab3, tab4 = st.tabs([
+    "💬 Assistant Chat", 
+    "📝 Quiz & MCQ Generator", 
+    "📖 PDF Lecture Summarizer", 
+    "🧮 Math & Logic Solver"
+])
 
 # ==========================================
-# MODULE 1: ASSISTANT CHAT
+# TAB 1: ASSISTANT CHAT
 # ==========================================
-if app_mode == "💬 Assistant Chat":
+with tab1:
     st.markdown("### 💬 Academic Chat Assistant")
     st.markdown("Ask general academic queries, essay guidance, conceptual clarifications, or research notes.")
 
@@ -147,19 +147,16 @@ if app_mode == "💬 Assistant Chat":
 
     # Chat Input
     if prompt := st.chat_input("Ask any academic question (e.g., Explain First Law of Thermodynamics)..."):
-        # Add user message
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generate response using hybrid router
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 response_text, mode_tag = router.get_response(prompt)
                 st.markdown(response_text)
                 st.caption(f"Engine Mode: {mode_tag}")
                 
-                # Save assistant response
                 st.session_state.messages.append({
                     "role": "assistant", 
                     "content": response_text, 
@@ -167,13 +164,13 @@ if app_mode == "💬 Assistant Chat":
                 })
 
 # ==========================================
-# MODULE 2: QUIZ & MCQ GENERATOR
+# TAB 2: QUIZ & MCQ GENERATOR
 # ==========================================
-elif app_mode == "📝 Quiz & MCQ Generator":
+with tab2:
     st.markdown("### 📝 Interactive Quiz & MCQ Generator")
     st.markdown("Test your knowledge instantly on any academic subject.")
 
-    subject = st.text_input("Enter Subject or Topic (e.g., Thermodynamics, Data Structures, Cyber Law):", "Thermodynamics")
+    subject = st.text_input("Enter Subject or Topic (e.g., Thermodynamics, Data Structures, Cyber Law):", "Thermodynamics", key="quiz_subject_input")
     
     if st.button("Generate Practice Quiz"):
         with st.spinner("Generating custom practice questions..."):
@@ -186,13 +183,13 @@ elif app_mode == "📝 Quiz & MCQ Generator":
             st.caption(f"Engine Mode: {mode_tag}")
 
 # ==========================================
-# MODULE 3: PDF LECTURE SUMMARIZER
+# TAB 3: PDF LECTURE SUMMARIZER
 # ==========================================
-elif app_mode == "📖 PDF Lecture Summarizer":
+with tab3:
     st.markdown("### 📖 PDF Lecture Notes & Document Summarizer")
     st.markdown("Upload your semester notes, research papers, or study guides to extract key insights instantly.")
 
-    uploaded_file = st.file_uploader("Upload PDF Document", type=["pdf"])
+    uploaded_file = st.file_uploader("Upload PDF Document", type=["pdf"], key="pdf_uploader_main")
     
     if uploaded_file is not None:
         with st.spinner("Reading document pages..."):
@@ -212,7 +209,7 @@ elif app_mode == "📖 PDF Lecture Summarizer":
                 with st.expander("🔍 View Raw Text Preview"):
                     st.write(text_content[:1500] + "..." if len(text_content) > 1500 else text_content)
                     
-                if st.button("Extract Key Summary & Action Items"):
+                if st.button("Extract Key Summary & Action Items", key="pdf_summary_btn"):
                     with st.spinner("Synthesizing core academic takeaways..."):
                         summary_prompt = f"Summarize the following academic notes into key bullet points and exam revision notes:\n\n{text_content[:4000]}"
                         response_text, mode_tag = router.get_response(summary_prompt)
@@ -226,15 +223,15 @@ elif app_mode == "📖 PDF Lecture Summarizer":
                 st.error(f"Error reading PDF file: {str(e)}")
 
 # ==========================================
-# MODULE 4: MATH & LOGIC SOLVER
+# TAB 4: MATH & LOGIC SOLVER
 # ==========================================
-elif app_mode == "🧮 Math & Logic Solver":
+with tab4:
     st.markdown("### 🧮 Math, Formula & Engineering Logic Solver")
     st.markdown("Step-by-step breakdown of equations, formulas, and technical problem statements.")
 
-    math_query = st.text_area("Enter Math/Engineering Problem or Formula Question:", "Explain the formula for First Law of Thermodynamics and solve a sample problem.")
+    math_query = st.text_area("Enter Math/Engineering Problem or Formula Question:", "Explain the formula for First Law of Thermodynamics and solve a sample problem.", key="math_query_input")
     
-    if st.button("Solve Step-by-Step"):
+    if st.button("Solve Step-by-Step", key="math_solve_btn"):
         with st.spinner("Solving problem with step-by-step logic..."):
             solver_prompt = f"Provide a detailed step-by-step mathematical or logical solution for: {math_query}"
             response_text, mode_tag = router.get_response(solver_prompt)
