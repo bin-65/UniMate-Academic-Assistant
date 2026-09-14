@@ -16,13 +16,13 @@ class LLMRouter:
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         
-        # Comprehensive model list to auto-bypass any 404 model not found errors
+        # Updated models list including lightweight & preview models
         self.models_to_try = [
+            "llama-3.1-8b-instant",
+            "llama-3.2-3b-preview",
+            "llama-3.2-1b-preview",
             "llama-3.3-70b-versatile",
-            "llama-3.1-70b-versatile",
-            "llama3-70b-8192",
-            "mixtral-8x7b-32768",
-            "gemma2-9b-it"
+            "mixtral-8x7b-32768"
         ]
 
     def is_online(self) -> bool:
@@ -46,17 +46,21 @@ class LLMRouter:
             "max_tokens": 1024
         }
 
-        error_logs = []
+        detailed_errors = []
         for model_name in self.models_to_try:
             payload["model"] = model_name
             try:
-                response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10)
+                response = requests.post(self.groq_url, headers=headers, json=payload, timeout=8)
                 if response.status_code == 200:
                     data = response.json()
-                    return data['choices'][0]['message']['content'], f"[Online Mode]"
+                    return data['choices'][0]['message']['content'], "[Online Mode]"
                 else:
-                    error_logs.append(f"{model_name}: {response.status_code}")
+                    # Capture the exact error message from Groq JSON response
+                    err_msg = response.json().get("error", {}).get("message", response.text)
+                    detailed_errors.append(f"Model `{model_name}` ({response.status_code}): {err_msg}")
             except Exception as e:
-                error_logs.append(f"{model_name}: Error")
+                detailed_errors.append(f"Model `{model_name}` Exception: {str(e)}")
 
-        return f"**Groq API Error:** All fallback models tried. Details: {', '.join(error_logs)}", "[API Error]"
+        # If everything fails, show the exact detailed errors on screen
+        error_report = "\n\n".join(detailed_errors)
+        return f"**Detailed Groq Diagnostics:**\n\n{error_report}", "[API Error]"
