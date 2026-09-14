@@ -14,6 +14,8 @@ class LLMRouter:
         if not self.groq_api_key:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
             
+        print(f"DEBUG: Loaded API Key length -> {len(self.groq_api_key)}")
+            
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         self.ollama_url = "http://127.0.0.1:11434/api/generate"
 
@@ -21,7 +23,6 @@ class LLMRouter:
         return bool(self.groq_api_key)
 
     def get_response(self, prompt: str) -> tuple[str, str]:
-        # Pehli koshish: Agar Groq key mojood hai toh online mode use karo
         if self.groq_api_key:
             headers = {
                 "Authorization": f"Bearer {self.groq_api_key}",
@@ -39,27 +40,27 @@ class LLMRouter:
 
             try:
                 response = requests.post(self.groq_url, headers=headers, json=payload, timeout=15.0)
+                print(f"DEBUG: Groq Response Status Code -> {response.status_code}")
                 if response.status_code == 200:
                     data = response.json()
                     return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
                 else:
-                    print(f"Groq API Error {response.status_code}: {response.text}")
+                    print(f"DEBUG: Groq Error Body -> {response.text}")
             except Exception as e:
-                print(f"Groq Connection Failed: {str(e)}")
+                print(f"DEBUG: Groq Connection Exception -> {str(e)}")
 
-        # Doosri koshish (Fallback): Agar online fail ho ya key na ho, toh local Ollama try karo
+        # Fallback to Ollama
         try:
             payload = {
                 "model": "llama3",
                 "prompt": prompt,
                 "stream": False
             }
-            response = requests.post(self.ollama_url, json=payload, timeout=10.0)
+            response = requests.post(self.ollama_url, json=payload, timeout=5.0)
             if response.status_code == 200:
                 data = response.json()
                 return data.get('response', ''), "[Offline Mode (Ollama)]"
         except Exception as e:
             pass
 
-        # Agar dono fail ho jayein tab yeh final error return kare ga
-        return "**[Connection Error]** Both Groq (Online) and Ollama (Offline) are unavailable. Please check your internet connection or start Ollama.", "[Error Mode]"
+        return "**[Connection Error]** Both Groq and Ollama failed. Check terminal for details.", "[Error Mode]"
