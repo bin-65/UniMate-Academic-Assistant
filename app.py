@@ -120,15 +120,9 @@ with st.sidebar:
     st.markdown("Hybrid Smart Learning Engine")
     st.markdown("---")
     
-    # Engine Status Indicator
-    if router.is_online():
-        st.success("🟢 Engine Status: Hybrid Active")
-    else:
-        st.warning("🟡 Engine Status: Local Smart Mode")
-        
-    st.markdown("---")
+    # 📁 Document Uploader (Prominently placed at the top of the sidebar)
     st.markdown("### 📁 Document Knowledge Base")
-    st.markdown("Upload files (**PDF, Word, Excel**) to query and summarize directly:")
+    st.markdown("Upload **PDF, Word, or Excel** files:")
     
     uploaded_doc = st.file_uploader("Choose a study file", type=["pdf", "docx", "xlsx", "xls"], key="sidebar_file_uploader")
     
@@ -138,13 +132,21 @@ with st.sidebar:
             st.session_state["uploaded_doc_text"] = document_context
             st.success(f"✅ Loaded: {uploaded_doc.name}")
             with st.expander("Preview Extracted Data"):
-                st.write(document_context[:800] + "..." if len(document_context) > 800 else document_context)
+                st.write(document_context[:600] + "..." if len(document_context) > 600 else document_context)
     elif "uploaded_doc_text" in st.session_state and st.session_state["uploaded_doc_text"]:
         st.info("📌 Active Document Loaded in Memory")
 
     st.markdown("---")
+    
+    # Engine Status Indicator
+    if router.is_online():
+        st.success("🟢 Engine Status: Hybrid Active")
+    else:
+        st.warning("🟡 Engine Status: Local Smart Mode")
+        
+    st.markdown("---")
     st.markdown("### 💡 Quick Tips")
-    st.markdown("- Upload your notes in the sidebar above.\n- Ask questions in Chat or Math Solver about your uploaded files!")
+    st.markdown("- Upload your files above.\n- Ask questions in any tab!")
 
 # --- Main App Title ---
 st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
