@@ -16,7 +16,7 @@ class LLMRouter:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.ollama_url = "http://localhost:11434/api/generate"
+        self.ollama_url = "http://127.0.0.1:11434/api/generate"
         self.executor = ThreadPoolExecutor(max_workers=2)
 
     def is_online(self) -> bool:
@@ -24,22 +24,23 @@ class LLMRouter:
 
     def _call_groq_api(self, payload: dict, headers: dict) -> tuple[str, str]:
         try:
-            response = requests.post(self.groq_url, headers=headers, json=payload, timeout=3.0)
+            # Timeout increased to 15 seconds to prevent premature dropping
+            response = requests.post(self.groq_url, headers=headers, json=payload, timeout=15.0)
             if response.status_code == 200:
                 data = response.json()
-                return data['choices'][0]['message']['content'], "[Online Mode]"
+                return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
             else:
-                return self._local_engine(prompt_text_global), "[Hybrid Fallback Mode]"
-        except Exception:
-            return self._local_engine(prompt_text_global), "[Hybrid Fallback Mode (Offline)]"
+                return f"**[Groq API Error]** Status code {response.status_code}", "[Error Mode]"
+        except Exception as e:
+            # If online fails explicitly, fallback safely
+            return self._local_engine(prompt_text_global), f"[Hybrid Fallback Mode (Offline due to: {str(e)})]"
 
     def get_response(self, prompt: str) -> tuple[str, str]:
         global prompt_text_global
         prompt_text_global = prompt
 
-        # Agar API key nahi hai, toh seedha local Ollama engine
         if not self.groq_api_key:
-            return self._local_engine(prompt), "[Offline Mode (Ollama)]"
+            return self._local_engine(prompt), "[Offline Mode (Ollama - Qwen)]"
 
         headers = {
             "Authorization": f"Bearer {self.groq_api_key}",
@@ -58,19 +59,19 @@ class LLMRouter:
 
         try:
             future = self.executor.submit(self._call_groq_api, payload, headers)
-            return future.result(timeout=3.0)
+            # Safe timeout window for thread execution
+            return future.result(timeout=16.0)
         except (TimeoutError, Exception):
-            return self._local_engine(prompt), "[Hybrid Fallback Mode (Offline Ollama)]"
+            return self._local_engine(prompt), "[Hybrid Fallback Mode (Offline Ollama - Qwen)]"
 
     def _local_engine(self, prompt: str) -> str:
         try:
-            # Ollama local call (llama3:latest)
             payload = {
-                "model": "llama3:latest",
+                "model": "qwen2.5:3b",
                 "prompt": f"You are UniMate, an expert academic assistant for university students. Answer the following query clearly:\n\n{prompt}",
                 "stream": False
             }
-            response = requests.post(self.ollama_url, json=payload, timeout=15.0)
+            response = requests.post(self.ollama_url, json=payload, timeout=300.0)
             if response.status_code == 200:
                 data = response.json()
                 return data.get("response", "No response generated from Ollama.")
