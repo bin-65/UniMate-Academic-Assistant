@@ -24,15 +24,14 @@ class LLMRouter:
 
     def _call_groq_api(self, payload: dict, headers: dict) -> tuple[str, str]:
         try:
-            # Timeout increased to 15 seconds to prevent premature dropping
             response = requests.post(self.groq_url, headers=headers, json=payload, timeout=15.0)
             if response.status_code == 200:
                 data = response.json()
                 return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
             else:
-                return f"**[Groq API Error]** Status code {response.status_code}", "[Error Mode]"
+                # Capture exact Groq error response for debugging 400 error
+                return f"**[Groq API Error 400 Details]** {response.text}", "[Error Mode]"
         except Exception as e:
-            # If online fails explicitly, fallback safely
             return self._local_engine(prompt_text_global), f"[Hybrid Fallback Mode (Offline due to: {str(e)})]"
 
     def get_response(self, prompt: str) -> tuple[str, str]:
@@ -48,7 +47,7 @@ class LLMRouter:
         }
         
         payload = {
-            "model": "llama3-8b-8192",  # Updated to stable Groq model ID to avoid 404 error
+            "model": "llama-3.1-8b-instant",  # Using Groq's standard active model
             "messages": [
                 {"role": "system", "content": "You are UniMate, an expert academic assistant for university students."},
                 {"role": "user", "content": prompt}
@@ -59,7 +58,6 @@ class LLMRouter:
 
         try:
             future = self.executor.submit(self._call_groq_api, payload, headers)
-            # Safe timeout window for thread execution
             return future.result(timeout=16.0)
         except (TimeoutError, Exception):
             return self._local_engine(prompt), "[Hybrid Fallback Mode (Offline Ollama - Qwen)]"
