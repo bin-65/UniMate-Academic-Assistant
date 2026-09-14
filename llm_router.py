@@ -5,9 +5,15 @@ import streamlit as st
 class LLMRouter:
     def __init__(self):
         self.groq_api_key = ""
+        
+        # Check multiple possible formats in Streamlit secrets
         try:
             if "GROQ_API_KEY" in st.secrets:
                 self.groq_api_key = st.secrets["GROQ_API_KEY"]
+            elif "groq" in st.secrets and "api_key" in st.secrets["groq"]:
+                self.groq_api_key = st.secrets["groq"]["api_key"]
+            elif "GROQ" in st.secrets and "API_KEY" in st.secrets["GROQ"]:
+                self.groq_api_key = st.secrets["GROQ"]["API_KEY"]
         except Exception:
             pass
             
@@ -50,11 +56,20 @@ class LLMRouter:
                     data = response.json()
                     return data['choices'][0]['message']['content'], "[Online Mode]"
                 else:
-                    print(f"API Error: {response.status_code} - {response.text}")
+                    return f"**Groq API Error ({response.status_code}):** {response.text}", "[API Error Mode]"
             except Exception as e:
-                print(f"Online Request Failed: {e}")
+                return f"**Connection Exception:** {str(e)}", "[Network Error Mode]"
 
-        # Local Offline Fallback Engine
+        # If key is completely missing, show exact warning instead of silent fallback
+        if not self.groq_api_key:
+            return (
+                "**[Configuration Notice]** `GROQ_API_KEY` was not found in Streamlit Secrets.\n\n"
+                "Please go to your **Streamlit Cloud Dashboard -> Settings -> Secrets** and paste your key like this:\n"
+                "```toml\nGROQ_API_KEY = \"gsk_your_actual_key_here\"\n```\n"
+                "Then click **Save** and **Reboot app**."
+            ), "[Missing Key]"
+
+        # Local Offline Fallback Engine (when internet is disconnected)
         return self._offline_fallback_response(prompt), "[Offline Mode]"
 
     def _offline_fallback_response(self, prompt: str) -> str:
