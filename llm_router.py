@@ -4,17 +4,21 @@ import streamlit as st
 
 class LLMRouter:
     def __init__(self):
-        # Streamlit secrets ya environment variables dono se key uthane ka secure tareeqa
+        # Safe way to fetch Groq key from Streamlit Secrets or Environment Variables (No crashes!)
+        self.groq_api_key = ""
         try:
-            self.groq_api_key = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
+            if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
+                self.groq_api_key = st.secrets["GROQ_API_KEY"]
         except Exception:
+            pass
+            
+        if not self.groq_api_key:
             self.groq_api_key = os.environ.get("GROQ_API_KEY", "")
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         self.ollama_url = "http://localhost:11434/api/generate"
         self.model_name = "llama3"
         
-        # Fast & Active Models list
         self.fallback_models = [
             "llama-3.1-8b-instant",
             "llama-3.3-70b-versatile",
@@ -25,13 +29,12 @@ class LLMRouter:
         return bool(self.groq_api_key) and not self.groq_api_key.startswith("gsk_yahan")
 
     def get_response(self, prompt: str) -> tuple[str, str]:
-        # 1. ONLINE MODE (Groq API - Ultra Fast)
+        # 1. Try Groq (Online/Cloud) if key is available
         if self.is_online():
             headers = {
                 "Authorization": f"Bearer {self.groq_api_key}",
                 "Content-Type": "application/json"
             }
-            
             for model_id in self.fallback_models:
                 payload = {
                     "model": model_id,
@@ -47,12 +50,10 @@ class LLMRouter:
                     if response.status_code == 200:
                         data = response.json()
                         return data['choices'][0]['message']['content'], f"[Online Mode (Groq: {model_id})]"
-                    else:
-                        continue
                 except Exception:
-                    continue 
+                    continue
 
-        # 2. OFFLINE MODE (Local PC / Ollama fallback)
+        # 2. Fallback to Local Ollama (Offline Mode) if Groq isn't configured or fails
         try:
             payload = {
                 "model": self.model_name,
@@ -64,14 +65,12 @@ class LLMRouter:
                     "temperature": 0.7
                 }
             }
-            
-            response = requests.post(self.ollama_url, json=payload, timeout=3.0)
-            
+            response = requests.post(self.ollama_url, json=payload, timeout=5.0)
             if response.status_code == 200:
                 data = response.json()
                 return data.get('response', ''), "[Offline Mode (Ollama)]"
-            else:
-                return f"**[Error]** Groq API Key check karein ya local server on karein.", "[Error Mode]"
-                
         except Exception:
-            return "⚠️ **Groq API Key missing or invalid.** Baraye meharbani Streamlit Cloud secrets mein `GROQ_API_KEY` set karein.", "[Error Mode]"
+            pass
+
+        # 3. Graceful fallback message if neither is available
+        return "⚠️ **Connection Notice:** Na toh Groq API key mili hai aur na hi local Ollama chal raha hai. Baraye meharbani ya toh Ollama on karein ya secrets check karein.", "[Error Mode]"
