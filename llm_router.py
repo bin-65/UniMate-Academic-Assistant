@@ -27,7 +27,7 @@ class LLMRouter:
                 "Content-Type": "application/json"
             }
             payload = {
-                "model": "llama-3.1-8b-instant",
+                "model": "llama3-8b-8192",  # Updated valid Groq model name
                 "messages": [
                     {"role": "system", "content": "You are UniMate, an expert academic assistant."},
                     {"role": "user", "content": prompt}
@@ -41,10 +41,9 @@ class LLMRouter:
                     data = response.json()
                     return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
                 else:
-                    # Agar Groq API ki taraf se koi error code aaye toh usay return karein
                     return f"**[Groq API Error]** Status Code: {response.status_code} - {response.text}", "[Error Mode]"
             except Exception as e:
-                pass # Agar online request fail ho toh fallback ke tor par offline try karega
+                pass # Fallback to offline if request fails
 
         # 2. OFFLINE MODE (Local PC / Ollama)
         try:
@@ -68,4 +67,4 @@ class LLMRouter:
                 return f"**[Ollama Error]** Status: {response.status_code}", "[Error Mode]"
                 
         except Exception as e:
-            return "**[Deployment Notice]** Aap app ko online (Streamlit Cloud) chala rahe hain, lekin Groq API key set nahi ki ya Ollama band hai. Baraye meharbani Streamlit Cloud ki settings mein ja kar `GROQ_API_KEY` add karein.", "[Error Mode]"
+            return "**[Deployment Notice]** Aap app ko online (Streamlit Cloud) chala rahe hain, lekin Groq API key set nahi ki ya Ollama band hai.", "[Error Mode]"
