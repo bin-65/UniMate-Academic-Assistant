@@ -5,15 +5,18 @@ import streamlit as st
 class LLMRouter:
     def __init__(self):
         try:
+            # Streamlit secrets se key fetch karne ki koshish
             self.groq_api_key = st.secrets.get("GROQ_API_KEY", "")
-        except Exception:
+        except Exception as e:
             self.groq_api_key = ""
+            st.error(f"Secrets Error Details: {e}")
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         self.ollama_url = "http://localhost:11434/api/generate"
         self.model_name = "llama3"
 
     def is_online(self) -> bool:
+        # Check karein ke key valid format ki hai aur khali nahi hai
         return bool(self.groq_api_key) and not self.groq_api_key.startswith("gsk_yahan")
 
     def get_response(self, prompt: str) -> tuple[str, str]:
@@ -37,8 +40,11 @@ class LLMRouter:
                 if response.status_code == 200:
                     data = response.json()
                     return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
-            except Exception:
-                pass # Agar online fail ho toh offline try karega
+                else:
+                    # Agar Groq API ki taraf se koi error code aaye toh usay return karein
+                    return f"**[Groq API Error]** Status Code: {response.status_code} - {response.text}", "[Error Mode]"
+            except Exception as e:
+                pass # Agar online request fail ho toh fallback ke tor par offline try karega
 
         # 2. OFFLINE MODE (Local PC / Ollama)
         try:
