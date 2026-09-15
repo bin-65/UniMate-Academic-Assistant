@@ -142,11 +142,11 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # Engine Status Indicator
+    # Engine Status Indicator (Warning check removed, clean status only)
     if router.is_online():
         st.success("🟢 Engine Status: Hybrid Active")
     else:
-        st.warning("🟡 Engine Status: Local Smart Mode")
+        st.info("🔵 Engine Status: Ready")
         
     st.markdown("---")
     st.markdown("### 💡 Quick Tips")
