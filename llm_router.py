@@ -1,4 +1,3 @@
-import json
 import requests
 
 class LLMRouter:
@@ -14,7 +13,7 @@ class LLMRouter:
             payload = {
                 "model": self.model_name,
                 "prompt": prompt,
-                "stream": True,  # <--- Yeh line timeout ko hamesha ke liye khatam kar degi
+                "stream": False,
                 "options": {
                     "num_predict": 512,
                     "num_ctx": 2048,
@@ -22,18 +21,13 @@ class LLMRouter:
                 }
             }
             
-            # stream=True ki waja se connection live rahega aur data chunk by chunk aayega
-            response = requests.post(self.ollama_url, json=payload, stream=True, timeout=60.0)
+            # timeout=None ka matlab hai ke connection kabhi timeout nahi hoga, 
+            # Python tab tak wait karega jab tak Ollama khud jawab wapas na bhej de!
+            response = requests.post(self.ollama_url, json=payload, timeout=None)
             
             if response.status_code == 200:
-                full_response = ""
-                for line in response.iter_lines():
-                    if line:
-                        data = json.loads(line.decode('utf-8'))
-                        full_response += data.get('response', '')
-                        if data.get('done', False):
-                            break
-                return full_response, "[Offline Mode (Ollama)]"
+                data = response.json()
+                return data.get('response', ''), "[Offline Mode (Ollama)]"
             else:
                 return f"**[Ollama Error]** Status: {response.status_code}", "[Error Mode]"
                 
