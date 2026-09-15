@@ -1,14 +1,45 @@
+import os
 import requests
+import streamlit as st
 
 class LLMRouter:
     def __init__(self):
+        # Yeh Streamlit secrets ya environment variable se API key uthayega
+        self.groq_api_key = st.secrets.get("GROQ_API_KEY", "")
+        self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
+        
         self.ollama_url = "http://localhost:11434/api/generate"
         self.model_name = "llama3"
 
     def is_online(self) -> bool:
-        return False
+        # Check karega ke kya Groq ki API key dali gayi hai ya nahi
+        return bool(self.groq_api_key) and not self.groq_api_key.startswith("gsk_yahan")
 
     def get_response(self, prompt: str) -> tuple[str, str]:
+        # 1. ONLINE MODE (Streamlit Cloud ya jab Groq key ho)
+        if self.is_online():
+            headers = {
+                "Authorization": f"Bearer {self.groq_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "llama-3.1-8b-instant",
+                "messages": [
+                    {"role": "system", "content": "You are UniMate, an expert academic assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 1024
+            }
+            try:
+                response = requests.post(self.groq_url, headers=headers, json=payload, timeout=30.0)
+                if response.status_code == 200:
+                    data = response.json()
+                    return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
+            except Exception:
+                pass # Agar online fail ho toh niche offline try karega
+
+        # 2. OFFLINE MODE (Local PC / Ollama)
         try:
             payload = {
                 "model": self.model_name,
@@ -21,8 +52,6 @@ class LLMRouter:
                 }
             }
             
-            # timeout=None ka matlab hai ke connection kabhi timeout nahi hoga, 
-            # Python tab tak wait karega jab tak Ollama khud jawab wapas na bhej de!
             response = requests.post(self.ollama_url, json=payload, timeout=None)
             
             if response.status_code == 200:
@@ -32,4 +61,4 @@ class LLMRouter:
                 return f"**[Ollama Error]** Status: {response.status_code}", "[Error Mode]"
                 
         except Exception as e:
-            return f"**[Connection Error]** Details: {str(e)}", "[Error Mode]"
+                return "**[Deployment Notice]** Aap app ko online (Streamlit Cloud) chala rahe hain, lekin Groq API key set nahi ki ya Ollama band hai. Baraye meharbani Streamlit Cloud ki settings mein ja kar `GROQ_API_KEY` add karein.", "[Error Mode]"
