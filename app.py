@@ -1,13 +1,8 @@
 import streamlit as st
 from llm_router import LLMRouter
-
-# Is decorator ki waja se router sirf aik dafa memory mein load hoga, baar baar nahi!
-@st.cache_resource
-def get_router():
-    return LLMRouter()
-
-# Phir app mein jahan bhi router use karna ho, aisay call karein:
-router = get_router()
+import fitz  # PyMuPDF for PDF
+from docx import Document  # python-docx for Word
+import pandas as pd  # pandas for Excel
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -17,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Initialize Router ---
+# --- Initialize Router (Cached) ---
 @st.cache_resource
 def get_router():
     return LLMRouter()
@@ -124,7 +119,6 @@ with st.sidebar:
     st.markdown("Hybrid Smart Learning Engine")
     st.markdown("---")
     
-    # 📁 Document Uploader (Prominently placed at the top of the sidebar)
     st.markdown("### 📁 Document Knowledge Base")
     st.markdown("Upload **PDF, Word, or Excel** files:")
     
@@ -142,9 +136,9 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # Engine Status Indicator (Warning check removed, clean status only)
+    # Engine Status Indicator
     if router.is_online():
-        st.success("🟢 Engine Status: Hybrid Active")
+        st.success("🟢 Engine Status: Cloud Active (Groq)")
     else:
         st.info("🔵 Engine Status: Ready")
         
@@ -153,7 +147,7 @@ with st.sidebar:
     st.markdown("- Upload your files above.\n- Ask questions in any tab!")
 
 # --- Main App Title ---
-st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_style := True)
 st.markdown('<p class="sub-header">Your lightning-fast hybrid study platform for university success</p>', unsafe_allow_html=True)
 
 # --- Front-and-Center Feature Tabs ---
@@ -165,7 +159,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: ASSISTANT CHAT (Context-Aware)
+# TAB 1: ASSISTANT CHAT
 # ==========================================
 with tab1:
     st.markdown("### 💬 Academic Chat Assistant")
