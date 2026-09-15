@@ -3,19 +3,18 @@ import requests
 
 class LLMRouter:
     def __init__(self):
-        # Yahan apni asli Groq API key direct paste kar dein
+        # Yahan apni asli Groq API key paste karein (agar online use karni hai)
         self.groq_api_key = "gsk_yahan_apni_asli_key_dal_do"
-            
-        print(f"DEBUG: Key Loaded -> {self.groq_api_key[:6]}... (Length: {len(self.groq_api_key)})")
             
         self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
         self.ollama_url = "http://127.0.0.1:11434/api/generate"
 
     def is_online(self) -> bool:
-        return bool(self.groq_api_key)
+        return bool(self.groq_api_key) and not self.groq_api_key.startswith("gsk_yahan")
 
     def get_response(self, prompt: str) -> tuple[str, str]:
-        if self.groq_api_key:
+        # 1. Try Groq Online API first if valid key exists
+        if self.is_online():
             headers = {
                 "Authorization": f"Bearer {self.groq_api_key}",
                 "Content-Type": "application/json"
@@ -40,27 +39,25 @@ class LLMRouter:
 
                 try:
                     response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10.0)
-                    print(f"Trying Groq Model '{model_name}' -> Status: {response.status_code}")
                     if response.status_code == 200:
                         data = response.json()
                         return data['choices'][0]['message']['content'], "[Online Mode (Groq)]"
-                    else:
-                        print(f"Error Response: {response.text}")
-                except Exception as e:
-                    print(f"Exception with {model_name}: {str(e)}")
+                except Exception:
+                    pass
 
-        # Fallback to Ollama if all Groq attempts fail
+        # 2. Fallback to Local Ollama if Groq is not configured or fails
         try:
             payload = {
                 "model": "llama3",
                 "prompt": prompt,
                 "stream": False
             }
-            response = requests.post(self.ollama_url, json=payload, timeout=5.0)
+            response = requests.post(self.ollama_url, json=payload, timeout=8.0)
             if response.status_code == 200:
                 data = response.json()
                 return data.get('response', ''), "[Offline Mode (Ollama)]"
-        except Exception as e:
+        except Exception:
             pass
 
-        return "**[Connection Error]** Groq API key appears invalid or unauthorized. Please generate a fresh key from Groq Console.", "[Error Mode]"
+        # 3. If both fail
+        return "**[Connection Notice]** Running in local fallback mode. Please ensure Ollama is running locally (`ollama serve`) or provide a valid Groq API key in `llm_router.py`.", "[Local Mode]"
