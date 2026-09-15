@@ -3,7 +3,7 @@ import requests
 class LLMRouter:
     def __init__(self):
         self.ollama_url = "http://localhost:11434/api/generate"
-        self.model_name = "llama3" # Ya jo model aapke paas installed ho (jaise llama3:8b)
+        self.model_name = "llama3:latest"  # Exact model name updated from your ollama list
 
     def is_online(self) -> bool:
         return False  # Strictly Offline Mode
