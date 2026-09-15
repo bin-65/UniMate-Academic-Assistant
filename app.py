@@ -136,18 +136,27 @@ with st.sidebar:
 
     st.markdown("---")
     
+    # API Key Input Backup (Cloud Secrets bypass)
+    st.markdown("### 🔑 API Key Settings")
+    user_key_input = st.text_input("Enter Groq API Key:", type="password", key="user_groq_key_input", placeholder="gsk_...")
+    if user_key_input:
+        st.session_state["user_groq_key"] = user_key_input
+        st.success("✅ Key Applied Successfully!")
+
+    st.markdown("---")
+    
     # Engine Status Indicator
     if router.is_online():
         st.success("🟢 Engine Status: Cloud Active (Groq)")
     else:
-        st.info("🔵 Engine Status: Ready")
+        st.info("🔵 Engine Status: Offline / Ready")
         
     st.markdown("---")
     st.markdown("### 💡 Quick Tips")
     st.markdown("- Upload your files above.\n- Ask questions in any tab!")
 
 # --- Main App Title ---
-st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_style := True)
+st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Your lightning-fast hybrid study platform for university success</p>', unsafe_allow_html=True)
 
 # --- Front-and-Center Feature Tabs ---
