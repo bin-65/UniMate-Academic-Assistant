@@ -14,7 +14,7 @@ class LLMRouter:
             payload = {
                 "model": self.model_name,
                 "prompt": prompt,
-                "stream": False,  # Filhal error se bachne ke liye False rakha hai
+                "stream": False,
                 "options": {
                     "num_predict": 512,
                     "num_ctx": 2048,
@@ -22,7 +22,8 @@ class LLMRouter:
                 }
             }
             
-            response = requests.post(self.ollama_url, json=payload, timeout=60.0)
+            # Timeout set to 300 seconds (5 minutes) for local model execution
+            response = requests.post(self.ollama_url, json=payload, timeout=300.0)
             
             if response.status_code == 200:
                 data = response.json()
