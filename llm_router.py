@@ -2,12 +2,10 @@ import requests
 
 class LLMRouter:
     def __init__(self):
-        # Local Ollama endpoint
         self.ollama_url = "http://localhost:11434/api/generate"
         self.model_name = "llama3"
 
     def is_online(self) -> bool:
-        # Forcing local offline mode using pure synchronous requests to avoid Windows asyncio socket bugs
         return False
 
     def get_response(self, prompt: str) -> tuple[str, str]:
@@ -18,8 +16,8 @@ class LLMRouter:
                 "stream": False
             }
             
-            # Pure synchronous post request - 100% stable on Windows, zero WinError 10054
-            response = requests.post(self.ollama_url, json=payload, timeout=60.0)
+            # Timeout extended to 180 seconds (3 minutes) to handle heavy PDF context processing locally
+            response = requests.post(self.ollama_url, json=payload, timeout=180.0)
             
             if response.status_code == 200:
                 data = response.json()
@@ -28,4 +26,4 @@ class LLMRouter:
                 return f"**[Ollama Error]** Status Code: {response.status_code}", "[Error Mode]"
                 
         except Exception as e:
-            return f"**[Connection Error]** Ollama server tak request nahi gayi. Details: {str(e)}", "[Error Mode]"
+            return f"**[Connection Error]** Details: {str(e)}", "[Error Mode]"
