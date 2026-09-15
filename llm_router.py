@@ -14,11 +14,10 @@ class LLMRouter:
         self.ollama_url = "http://localhost:11434/api/generate"
         self.model_name = "llama3"
         
-        # Future-proof list: Agar aik model fail ho ya decommission ho, toh agla khud try ho ga
+        # Fast & Active Models list (Sab se fast model sab se oopar rakha hai)
         self.fallback_models = [
-            "llama-3.3-70b-versatile",
             "llama-3.1-8b-instant",
-            "llama3-70b-8192",
+            "llama-3.3-70b-versatile",
             "llama3-8b-8192"
         ]
 
@@ -26,14 +25,13 @@ class LLMRouter:
         return bool(self.groq_api_key) and not self.groq_api_key.startswith("gsk_yahan")
 
     def get_response(self, prompt: str) -> tuple[str, str]:
-        # 1. ONLINE MODE (Streamlit Cloud / Groq API with Auto-Fallback)
+        # 1. ONLINE MODE (Groq API - Ultra Fast)
         if self.is_online():
             headers = {
                 "Authorization": f"Bearer {self.groq_api_key}",
                 "Content-Type": "application/json"
             }
             
-            # Loop chalaye ga taake jo model active ho, us se response aa jaye
             for model_id in self.fallback_models:
                 payload = {
                     "model": model_id,
@@ -45,14 +43,17 @@ class LLMRouter:
                     "max_tokens": 1024
                 }
                 try:
-                    response = requests.post(self.groq_url, headers=headers, json=payload, timeout=20.0)
+                    # Timeout ko 10 seconds kar diya hai taake app fast response de
+                    response = requests.post(self.groq_url, headers=headers, json=payload, timeout=10.0)
                     if response.status_code == 200:
                         data = response.json()
                         return data['choices'][0]['message']['content'], f"[Online Mode (Groq: {model_id})]"
+                    else:
+                        continue # Agar error ho toh foran aglay model par jao
                 except Exception:
-                    continue # Agar aik model fail ho toh foran agle par shift ho jao
+                    continue 
 
-        # 2. OFFLINE MODE (Local PC / Ollama) - Agar online na chale ya key na ho
+        # 2. OFFLINE MODE (Local PC / Ollama)
         try:
             payload = {
                 "model": self.model_name,
@@ -65,7 +66,7 @@ class LLMRouter:
                 }
             }
             
-            response = requests.post(self.ollama_url, json=payload, timeout=None)
+            response = requests.post(self.ollama_url, json=payload, timeout=5.0)
             
             if response.status_code == 200:
                 data = response.json()
@@ -74,4 +75,4 @@ class LLMRouter:
                 return f"**[Ollama Error]** Status: {response.status_code}", "[Error Mode]"
                 
         except Exception as e:
-            return "**[Deployment Notice]** Aap app ko online chala rahe hain, lekin Groq API key set nahi hai ya Ollama band hai. Baraye meharbani secrets check karein.", "[Error Mode]"
+            return "**[Connection Notice]** API key ya local server ka masla hai. Baraye meharbani connection check karein.", "[Error Mode]"
