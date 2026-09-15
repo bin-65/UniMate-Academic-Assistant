@@ -27,7 +27,7 @@ class LLMRouter:
                 "Content-Type": "application/json"
             }
             payload = {
-                "model": "llama3-8b-8192",  # Updated valid Groq model name
+                "model": "llama-3.1-8b-instant",  # Updated to active Groq model
                 "messages": [
                     {"role": "system", "content": "You are UniMate, an expert academic assistant."},
                     {"role": "user", "content": prompt}
