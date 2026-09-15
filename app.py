@@ -1,9 +1,13 @@
 import streamlit as st
-import io
-import fitz  # PyMuPDF for PDF
-from docx import Document  # python-docx for Word
-import pandas as pd  # pandas for Excel
 from llm_router import LLMRouter
+
+# Is decorator ki waja se router sirf aik dafa memory mein load hoga, baar baar nahi!
+@st.cache_resource
+def get_router():
+    return LLMRouter()
+
+# Phir app mein jahan bhi router use karna ho, aisay call karein:
+router = get_router()
 
 # --- Page Configuration ---
 st.set_page_config(
