@@ -136,12 +136,17 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # API Key Input Backup (Cloud Secrets bypass)
+    # API Key Input Backup with Save Button (Guaranteed to apply)
     st.markdown("### 🔑 API Key Settings")
-    user_key_input = st.text_input("Enter Groq API Key:", type="password", key="user_groq_key_input", placeholder="gsk_...")
-    if user_key_input:
-        st.session_state["user_groq_key"] = user_key_input
+    if "user_groq_key" not in st.session_state:
+        st.session_state["user_groq_key"] = ""
+        
+    temp_key = st.text_input("Enter Groq API Key:", type="password", value=st.session_state["user_groq_key"], placeholder="gsk_...", key="groq_input_field")
+    
+    if st.button("Save & Apply Key"):
+        st.session_state["user_groq_key"] = temp_key
         st.success("✅ Key Applied Successfully!")
+        st.rerun()
 
     st.markdown("---")
     
