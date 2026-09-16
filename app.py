@@ -36,47 +36,60 @@ bg_css_value = f"data:image/png;base64,{img_base64}" if img_base64 else "https:/
 # --- Lavish Library Platform & Responsive Styling ---
 css_styling = f"""
     <style>
+    /* Full page background styling */
     .stApp {{
-        background-image: linear-gradient(rgba(15, 23, 42, 0.70), rgba(15, 23, 42, 0.78)), 
+        background-image: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), 
                           url('{bg_css_value}');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-    }}
+    }
+    
+    /* Remove top header bar background so library background shows through */
+    header[data-testid="stHeader"] {{
+        background: transparent !important;
+    }
+    
+    /* Big prominent title */
     .main-header {{
-        font-size: 2.4rem;
+        font-size: 3.0rem !important;
         color: #F8FAFC !important;
-        font-weight: 800;
-        margin-bottom: 0px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-    }}
+        font-weight: 900 !important;
+        margin-bottom: 2px !important;
+        text-shadow: 0 3px 6px rgba(0,0,0,0.6);
+        letter-spacing: -0.5px;
+    }
     .sub-header {{
-        font-size: 1.15rem;
-        color: #CBD5E1 !important;
-        margin-bottom: 25px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    }}
+        font-size: 1.25rem !important;
+        color: #E2E8F0 !important;
+        margin-bottom: 30px !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    /* Main container frosted glass styling */
     div.block-container {{
-        background: rgba(15, 23, 42, 0.85);
+        background: rgba(15, 23, 42, 0.82);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 16px;
+        border-radius: 18px;
         padding: 2.5rem;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         color: #F8FAFC;
-    }}
+    }
+    
+    /* Sidebar untouched & clean */
     section[data-testid="stSidebar"] {{
         background-color: rgba(241, 245, 249, 0.95);
         border-right: 1px solid rgba(203, 213, 225, 0.6);
-    }}
+    }
     section[data-testid="stSidebar"] .block-container {{
         background: transparent;
         backdrop-filter: none;
         border: none;
         box-shadow: none;
         color: #0F172A !important;
-    }}
+    }
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3, 
@@ -86,28 +99,34 @@ css_styling = f"""
     section[data-testid="stSidebar"] label {{
         color: #0F172A !important;
     }}
+    
+    /* Global text color for high visibility */
     h1, h2, h3, h4, h5, h6, p, span, label {{
         color: #F8FAFC !important;
-    }}
+    }
+    
+    /* Inputs styling */
     .stTextInput input, .stTextArea textarea, .stSelectbox select {{
-        background-color: rgba(30, 41, 59, 0.9) !important;
+        background-color: rgba(30, 41, 59, 0.85) !important;
         color: #F8FAFC !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 8px !important;
     }}
+    
+    /* Balanced and elegant blue buttons */
     .stButton button {{
-        background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
         color: white;
         font-weight: 600;
         border: none;
         border-radius: 8px;
         padding: 0.5rem 1rem;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
         transition: all 0.3s ease;
     }}
     .stButton button:hover {{
-        background: linear-gradient(135deg, #2563EB 100%, #1E40AF 100%);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
     }}
     </style>
 """
@@ -174,7 +193,7 @@ with st.sidebar:
     st.markdown("### 💡 Quick Tips")
     st.markdown("- Upload your files above.\n- Ask questions in any tab!")
 
-# --- Main App Title ---
+# --- Main App Title (Enlarged & Clear) ---
 st.markdown('<p class="main-header">🎓 UniMate Academic Assistant</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Your lightning-fast hybrid study platform for university success</p>', unsafe_allow_html=True)
 
