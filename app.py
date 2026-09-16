@@ -33,25 +33,25 @@ def get_img_as_base64(file_path):
 img_base64 = get_img_as_base64("library_bg.png")
 bg_css_value = f"data:image/png;base64,{img_base64}" if img_base64 else "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop"
 
-# --- Lavish Library Platform & Responsive Styling ---
-css_styling = f"""
+# --- Lavish Library Platform & Responsive Styling (Safe String Injection) ---
+css_styling = """
     <style>
     /* Full page background styling */
-    .stApp {{
+    .stApp {
         background-image: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), 
-                          url('{bg_css_value}');
+                          url('BG_URL_PLACEHOLDER');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
     
     /* Remove top header bar background so library background shows through */
-    header[data-testid="stHeader"] {{
+    header[data-testid="stHeader"] {
         background: transparent !important;
     }
     
     /* Big prominent title */
-    .main-header {{
+    .main-header {
         font-size: 3.0rem !important;
         color: #F8FAFC !important;
         font-weight: 900 !important;
@@ -59,7 +59,7 @@ css_styling = f"""
         text-shadow: 0 3px 6px rgba(0,0,0,0.6);
         letter-spacing: -0.5px;
     }
-    .sub-header {{
+    .sub-header {
         font-size: 1.25rem !important;
         color: #E2E8F0 !important;
         margin-bottom: 30px !important;
@@ -67,7 +67,7 @@ css_styling = f"""
     }
     
     /* Main container frosted glass styling */
-    div.block-container {{
+    div.block-container {
         background: rgba(15, 23, 42, 0.82);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
@@ -79,11 +79,11 @@ css_styling = f"""
     }
     
     /* Sidebar untouched & clean */
-    section[data-testid="stSidebar"] {{
+    section[data-testid="stSidebar"] {
         background-color: rgba(241, 245, 249, 0.95);
         border-right: 1px solid rgba(203, 213, 225, 0.6);
     }
-    section[data-testid="stSidebar"] .block-container {{
+    section[data-testid="stSidebar"] .block-container {
         background: transparent;
         backdrop-filter: none;
         border: none;
@@ -96,25 +96,25 @@ css_styling = f"""
     section[data-testid="stSidebar"] h4, 
     section[data-testid="stSidebar"] p, 
     section[data-testid="stSidebar"] span, 
-    section[data-testid="stSidebar"] label {{
+    section[data-testid="stSidebar"] label {
         color: #0F172A !important;
-    }}
+    }
     
     /* Global text color for high visibility */
-    h1, h2, h3, h4, h5, h6, p, span, label {{
+    h1, h2, h3, h4, h5, h6, p, span, label {
         color: #F8FAFC !important;
     }
     
     /* Inputs styling */
-    .stTextInput input, .stTextArea textarea, .stSelectbox select {{
+    .stTextInput input, .stTextArea textarea, .stSelectbox select {
         background-color: rgba(30, 41, 59, 0.85) !important;
         color: #F8FAFC !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 8px !important;
-    }}
+    }
     
     /* Balanced and elegant blue buttons */
-    .stButton button {{
+    .stButton button {
         background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
         color: white;
         font-weight: 600;
@@ -123,13 +123,14 @@ css_styling = f"""
         padding: 0.5rem 1rem;
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
         transition: all 0.3s ease;
-    }}
-    .stButton button:hover {{
+    }
+    .stButton button:hover {
         background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
-    }}
+    }
     </style>
-"""
+""".replace("BG_URL_PLACEHOLDER", bg_css_value)
+
 st.markdown(css_styling, unsafe_allow_html=True)
 
 # --- Helper Function to Extract Text from Multiple Formats ---
