@@ -31,11 +31,10 @@ def get_img_as_base64(file_path):
     return ""
 
 img_base64 = get_img_as_base64("library_bg.png")
-# Fallback to high-end library background URL if local image is missing
 bg_css_value = f"data:image/png;base64,{img_base64}" if img_base64 else "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop"
 
 # --- Lavish Library Platform & Responsive Styling ---
-st.markdown(f"""
+css_styling = f"""
     <style>
     .stApp {{
         background-image: linear-gradient(rgba(15, 23, 42, 0.70), rgba(15, 23, 42, 0.78)), 
@@ -43,20 +42,20 @@ st.markdown(f"""
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-    }
+    }}
     .main-header {{
         font-size: 2.4rem;
         color: #F8FAFC !important;
         font-weight: 800;
         margin-bottom: 0px;
         text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-    }
+    }}
     .sub-header {{
         font-size: 1.15rem;
         color: #CBD5E1 !important;
         margin-bottom: 25px;
         text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    }
+    }}
     div.block-container {{
         background: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(12px);
@@ -66,18 +65,18 @@ st.markdown(f"""
         padding: 2.5rem;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
         color: #F8FAFC;
-    }
+    }}
     section[data-testid="stSidebar"] {{
         background-color: rgba(241, 245, 249, 0.95);
         border-right: 1px solid rgba(203, 213, 225, 0.6);
-    }
+    }}
     section[data-testid="stSidebar"] .block-container {{
         background: transparent;
         backdrop-filter: none;
         border: none;
         box-shadow: none;
         color: #0F172A !important;
-    }
+    }}
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3, 
@@ -86,16 +85,16 @@ st.markdown(f"""
     section[data-testid="stSidebar"] span, 
     section[data-testid="stSidebar"] label {{
         color: #0F172A !important;
-    }
+    }}
     h1, h2, h3, h4, h5, h6, p, span, label {{
         color: #F8FAFC !important;
-    }
+    }}
     .stTextInput input, .stTextArea textarea, .stSelectbox select {{
         background-color: rgba(30, 41, 59, 0.9) !important;
         color: #F8FAFC !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 8px !important;
-    }
+    }}
     .stButton button {{
         background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
         color: white;
@@ -105,13 +104,14 @@ st.markdown(f"""
         padding: 0.5rem 1rem;
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         transition: all 0.3s ease;
-    }
+    }}
     .stButton button:hover {{
         background: linear-gradient(135deg, #2563EB 100%, #1E40AF 100%);
         box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
-    }
+    }}
     </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(css_styling, unsafe_allow_html=True)
 
 # --- Helper Function to Extract Text from Multiple Formats ---
 def extract_document_text(uploaded_file) -> str:
