@@ -38,7 +38,7 @@ css_styling = """
     <style>
     /* Full page background styling */
     .stApp {
-        background-image: linear-gradient(rgba(15, 23, 42, 0.60), rgba(15, 23, 42, 0.70)), 
+        background-image: linear-gradient(rgba(15, 23, 42, 0.50), rgba(15, 23, 42, 0.60)), 
                           url('BG_URL_PLACEHOLDER');
         background-size: cover;
         background-position: center;
@@ -66,16 +66,16 @@ css_styling = """
         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
     
-    /* Main container frosted glass styling allowing background visibility */
+    /* Main container: Light Sky Blue Translucent Glass allowing background visibility */
     div.block-container {
-        background: rgba(15, 23, 42, 0.78);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(224, 242, 254, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(56, 189, 248, 0.4);
         border-radius: 18px;
         padding: 2.5rem;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
-        color: #F8FAFC;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        color: #0F172A;
     }
     
     /* Sidebar untouched & clean */
@@ -100,20 +100,32 @@ css_styling = """
         color: #0F172A !important;
     }
     
-    /* Global text color for high visibility */
-    h1, h2, h3, h4, h5, h6, p, span, label {
-        color: #F8FAFC !important;
+    /* Text inside main container for high visibility against light sky blue */
+    div.block-container h1, 
+    div.block-container h2, 
+    div.block-container h3, 
+    div.block-container h4, 
+    div.block-container h5, 
+    div.block-container h6, 
+    div.block-container p, 
+    div.block-container span, 
+    div.block-container label {
+        color: #0F172A !important;
     }
     
-    /* Inputs styling */
+    /* Inputs & Search boxes: Light background with clear dark typing text */
     .stTextInput input, .stTextArea textarea, .stSelectbox select {
-        background-color: rgba(30, 41, 59, 0.85) !important;
-        color: #F8FAFC !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        color: #0F172A !important;
+        border: 1px solid rgba(14, 165, 233, 0.5) !important;
         border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    .stTextInput input::placeholder, .stTextArea textarea::placeholder {
+        color: #64748b !important;
     }
     
-    /* Light Sky Blue Buttons with high visibility */
+    /* Light Sky Blue Action Buttons */
     .stButton button {
         background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%) !important;
         color: #0f172a !important;
@@ -133,22 +145,22 @@ css_styling = """
     /* Styled Feature Tabs Bar */
     .stTabs [data-baseweb="tab-list"] {
         gap: 10px;
-        background-color: rgba(30, 41, 59, 0.5);
+        background-color: rgba(186, 230, 253, 0.6);
         padding: 8px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(14, 165, 233, 0.3);
     }
     .stTabs [data-baseweb="tab"] {
-        background-color: rgba(15, 23, 42, 0.7);
+        background-color: rgba(255, 255, 255, 0.8);
         border-radius: 8px;
-        color: #cbd5e1 !important;
+        color: #0f172a !important;
         font-weight: 600;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(14, 165, 233, 0.2);
         padding: 10px 16px;
     }
     .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
-        color: #0f172a !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
         box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
     }
