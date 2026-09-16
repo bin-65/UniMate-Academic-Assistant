@@ -33,12 +33,12 @@ def get_img_as_base64(file_path):
 img_base64 = get_img_as_base64("library_bg.png")
 bg_css_value = f"data:image/png;base64,{img_base64}" if img_base64 else "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop"
 
-# --- Lavish Library Platform & Responsive Styling (Safe String Injection) ---
+# --- Lavish Library Platform & Light Sky Blue Theme Styling (Safe String Injection) ---
 css_styling = """
     <style>
     /* Full page background styling */
     .stApp {
-        background-image: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.75)), 
+        background-image: linear-gradient(rgba(15, 23, 42, 0.60), rgba(15, 23, 42, 0.70)), 
                           url('BG_URL_PLACEHOLDER');
         background-size: cover;
         background-position: center;
@@ -66,15 +66,15 @@ css_styling = """
         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
     
-    /* Main container frosted glass styling */
+    /* Main container frosted glass styling allowing background visibility */
     div.block-container {
-        background: rgba(15, 23, 42, 0.82);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(15, 23, 42, 0.78);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 18px;
         padding: 2.5rem;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
         color: #F8FAFC;
     }
     
@@ -109,24 +109,48 @@ css_styling = """
     .stTextInput input, .stTextArea textarea, .stSelectbox select {
         background-color: rgba(30, 41, 59, 0.85) !important;
         color: #F8FAFC !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
         border-radius: 8px !important;
     }
     
-    /* Balanced and elegant blue buttons */
+    /* Light Sky Blue Buttons with high visibility */
     .stButton button {
-        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-        color: white;
-        font-weight: 600;
+        background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%) !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
         border: none;
         border-radius: 8px;
         padding: 0.5rem 1rem;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
         transition: all 0.3s ease;
     }
     .stButton button:hover {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+        background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%) !important;
+        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
+        color: #020617 !important;
+    }
+
+    /* Styled Feature Tabs Bar */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background-color: rgba(30, 41, 59, 0.5);
+        padding: 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: rgba(15, 23, 42, 0.7);
+        border-radius: 8px;
+        color: #cbd5e1 !important;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 10px 16px;
+    }
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
     }
     </style>
 """.replace("BG_URL_PLACEHOLDER", bg_css_value)
