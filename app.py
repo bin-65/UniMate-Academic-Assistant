@@ -1,8 +1,11 @@
 import streamlit as st
-from llm_router import LLMRouter
+import io
+import os
+import base64
 import fitz  # PyMuPDF for PDF
 from docx import Document  # python-docx for Word
 import pandas as pd  # pandas for Excel
+from llm_router import LLMRouter
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -12,76 +15,100 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Initialize Router (Cached) ---
+# --- Initialize Router ---
 @st.cache_resource
 def get_router():
     return LLMRouter()
 
 router = get_router()
 
-# --- Light Professional Library & Study Platform Styling ---
-st.markdown("""
+# --- Helper to convert local background image to Base64 ---
+def get_img_as_base64(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    return ""
+
+img_base64 = get_img_as_base64("library_bg.png")
+# Fallback to high-end library background URL if local image is missing
+bg_css_value = f"data:image/png;base64,{img_base64}" if img_base64 else "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop"
+
+# --- Lavish Library Platform & Responsive Styling ---
+st.markdown(f"""
     <style>
-    .stApp {
-        background-image: linear-gradient(rgba(248, 250, 252, 0.90), rgba(241, 245, 249, 0.94)), 
-                          url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop');
+    .stApp {{
+        background-image: linear-gradient(rgba(15, 23, 42, 0.70), rgba(15, 23, 42, 0.78)), 
+                          url('{bg_css_value}');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
-    .main-header {
+    .main-header {{
         font-size: 2.4rem;
-        color: #1E3A8A !important;
+        color: #F8FAFC !important;
         font-weight: 800;
         margin-bottom: 0px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
     }
-    .sub-header {
+    .sub-header {{
         font-size: 1.15rem;
-        color: #475569 !important;
+        color: #CBD5E1 !important;
         margin-bottom: 25px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
-    div.block-container {
-        background: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(226, 232, 240, 0.9);
+    div.block-container {{
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 16px;
         padding: 2.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        color: #1E293B;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        color: #F8FAFC;
     }
-    section[data-testid="stSidebar"] {
+    section[data-testid="stSidebar"] {{
         background-color: rgba(241, 245, 249, 0.95);
         border-right: 1px solid rgba(203, 213, 225, 0.6);
     }
-    section[data-testid="stSidebar"] .block-container {
+    section[data-testid="stSidebar"] .block-container {{
         background: transparent;
         backdrop-filter: none;
         border: none;
         box-shadow: none;
-    }
-    h1, h2, h3, h4, h5, h6, p, span, label {
         color: #0F172A !important;
     }
-    .stTextInput input, .stTextArea textarea, .stSelectbox select {
-        background-color: #FFFFFF !important;
+    section[data-testid="stSidebar"] h1, 
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3, 
+    section[data-testid="stSidebar"] h4, 
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] span, 
+    section[data-testid="stSidebar"] label {{
         color: #0F172A !important;
-        border: 1px solid #CBD5E1 !important;
+    }
+    h1, h2, h3, h4, h5, h6, p, span, label {{
+        color: #F8FAFC !important;
+    }
+    .stTextInput input, .stTextArea textarea, .stSelectbox select {{
+        background-color: rgba(30, 41, 59, 0.9) !important;
+        color: #F8FAFC !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 8px !important;
     }
-    .stButton button {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    .stButton button {{
+        background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
         color: white;
         font-weight: 600;
         border: none;
         border-radius: 8px;
         padding: 0.5rem 1rem;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         transition: all 0.3s ease;
     }
-    .stButton button:hover {
-        background: linear-gradient(135deg, #1D4ED8 100%, #1E40AF 100%);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+    .stButton button:hover {{
+        background: linear-gradient(135deg, #2563EB 100%, #1E40AF 100%);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -119,6 +146,7 @@ with st.sidebar:
     st.markdown("Hybrid Smart Learning Engine")
     st.markdown("---")
     
+    # 📁 Document Uploader
     st.markdown("### 📁 Document Knowledge Base")
     st.markdown("Upload **PDF, Word, or Excel** files:")
     
@@ -136,25 +164,11 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # API Key Input Backup with Save Button (Guaranteed to apply)
-    st.markdown("### 🔑 API Key Settings")
-    if "user_groq_key" not in st.session_state:
-        st.session_state["user_groq_key"] = ""
-        
-    temp_key = st.text_input("Enter Groq API Key:", type="password", value=st.session_state["user_groq_key"], placeholder="gsk_...", key="groq_input_field")
-    
-    if st.button("Save & Apply Key"):
-        st.session_state["user_groq_key"] = temp_key
-        st.success("✅ Key Applied Successfully!")
-        st.rerun()
-
-    st.markdown("---")
-    
     # Engine Status Indicator
     if router.is_online():
-        st.success("🟢 Engine Status: Cloud Active (Groq)")
+        st.success("🟢 Engine Status: Hybrid Active")
     else:
-        st.info("🔵 Engine Status: Offline / Ready")
+        st.warning("🟡 Engine Status: Local Smart Mode")
         
     st.markdown("---")
     st.markdown("### 💡 Quick Tips")
@@ -173,7 +187,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: ASSISTANT CHAT
+# TAB 1: ASSISTANT CHAT (Context-Aware)
 # ==========================================
 with tab1:
     st.markdown("### 💬 Academic Chat Assistant")
