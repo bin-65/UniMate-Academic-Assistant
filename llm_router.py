@@ -27,9 +27,9 @@ class LLMRouter:
             
         self.gemini_model_name = "gemini-1.5-flash"
         
-        # Local Ollama fallback setup
+        # Local Ollama fallback setup (Multiple model names support)
         self.ollama_url = "http://127.0.0.1:11434/api/generate"
-        self.ollama_model_name = "llama3:latest"
+        self.ollama_model_names = ["llama3:latest", "llama3", "mistral", "phi3"]
 
     def is_online(self) -> bool:
         # Returns True if online Gemini key is available
@@ -44,29 +44,30 @@ class LLMRouter:
                 if response and response.text:
                     return response.text, "[Online Mode (Google Gemini)]"
             except Exception as e:
-                # Agar online fail ho jaye, toh neechay local Ollama par chala jayega
+                # Agar net off ya online fail ho jaye, toh foran local Ollama par chala jayega
                 pass
 
-        # 2. Offline Fallback: Local Ollama
-        try:
-            payload = {
-                "model": self.ollama_model_name,
-                "prompt": prompt,
-                "stream": False,
-                "options": {
-                    "num_predict": 512,
-                    "num_ctx": 2048,
-                    "temperature": 0.7
+        # 2. Offline Fallback: Local Ollama (Automatically checks correct available model)
+        for model_name in self.ollama_model_names:
+            try:
+                payload = {
+                    "model": model_name,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "num_predict": 512,
+                        "num_ctx": 2048,
+                        "temperature": 0.7
+                    }
                 }
-            }
-            
-            response = requests.post(self.ollama_url, json=payload, timeout=30.0)
-            
-            if response.status_code == 200:
-                data = response.json()
-                return data.get('response', ''), "[Offline Mode (Ollama)]"
-        except Exception as e:
-            pass
+                
+                response = requests.post(self.ollama_url, json=payload, timeout=30.0)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get('response', ''), f"[Offline Mode (Ollama - {model_name})]"
+            except Exception as e:
+                continue
 
-        # Agar dono fail ho jayein
+        # Agar sab fail ho jayein
         return "⚠️ **Connection Error:** Neither Online Gemini API nor Local Ollama is responding. Please check your internet or start Ollama.", "[Error Mode]"
